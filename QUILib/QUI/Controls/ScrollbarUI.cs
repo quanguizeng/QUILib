@@ -655,8 +655,6 @@ namespace QUI
                 {
                     if (!mHorizontal)
                     {
-                        mManager.killTimer(this, DEFAULT_TIMERID);
-
                         if (mOwner != null)
                         {
                             mOwner.setScrollPos(new Size(mOwner.getScrollPos().Width, mLastScrollPos + mLastScrollOffset));
