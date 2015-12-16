@@ -1,0 +1,10 @@
+E:\source\QUILib\bin\QUILib.dll
+E:\source\QUILib\bin\QUILib.pdb
+E:\source\QUILib\QUILib\obj\Debug\QUILib.dll
+E:\source\QUILib\QUILib\obj\Debug\QUILib.pdb
+E:\source\QUILib\QUILib\obj\Debug\QUILib.csprojResolveAssemblyReference.cache
+D:\工作\开发日记\2015-12-16\QUILib\bin\QUILib.dll
+D:\工作\开发日记\2015-12-16\QUILib\bin\QUILib.pdb
+D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.dll
+D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.pdb
+D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.csprojResolveAssemblyReference.cache
