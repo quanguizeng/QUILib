@@ -457,15 +457,11 @@ namespace QUI
             if (bitmap == null || bitmap == "")
             {
                 return null;
-                //throw new Exception("文件名不能为空");
             }
 
             if (mImageHash.ContainsKey(bitmap) == false)
             {
-                if (addImage(bitmap, type, mask) != null)
-                {
-                    return mImageHash[bitmap];
-                }
+                return addImage(bitmap, type, mask);
             }
 
             return mImageHash[bitmap];
@@ -475,7 +471,7 @@ namespace QUI
             if (File.Exists(bitmapFileName) == false)
             {
                 string msg = string.Format("找不到该图片\r\n{0}", bitmapFileName);
-                //MessageBox.Show(msg);
+                MessageBox.Show(msg);
                 return null;
             }
             if (mImageHash.ContainsKey(bitmapFileName) == true)
@@ -1443,6 +1439,11 @@ namespace QUI
             string name = control.getName();
             if (control.getName() == "")
             {
+                return null;
+            }
+            if (manager.mNameHash.ContainsKey(name))
+            {
+                //throw new Exception(string.Format("控件名字{0}重复", name));
                 return null;
             }
             manager.mNameHash.Add(name, control);

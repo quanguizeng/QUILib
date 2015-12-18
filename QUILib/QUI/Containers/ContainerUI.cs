@@ -478,6 +478,7 @@ namespace QUI
             rcTemp = rectPaint;
             rcTemp.Intersect(mRectItem);
 
+            Region oldRgn = graphics.Clip;
             RenderClip clip = new RenderClip();
             RenderClip.generateClip(ref graphics, rcTemp, ref clip);
 
@@ -583,6 +584,7 @@ namespace QUI
                     mHorizontalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
                 }
             }
+            graphics.Clip = oldRgn;
         }
         public override void setAttribute(string name, string value)
         {

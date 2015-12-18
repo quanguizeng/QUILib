@@ -8,16 +8,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using QUI;
-using System.Diagnostics;
 
-namespace ListDemo
+namespace ListDemo2
 {
     public partial class Form1 : Form,INotifyUI
     {
         public Form1()
         {
             InitializeComponent();
-
             {
                 Form form = this;
                 mManager = new PaintManagerUI();
@@ -47,9 +45,7 @@ namespace ListDemo
                 init();
             }
 
-
         }
-
         ~Form1()
         {
             if (mManager != null)
@@ -214,13 +210,15 @@ namespace ListDemo
 
         public void addSomeListItem()
         {
-            ListUI pList = (ListUI)mManager.findControl("domainlist");
+            ListUI pList = (ListUI)mManager.findControl("userlist");
             for (int i = 0; i < 15; i++)
             {
                 ListTextElementUI pListElement = new ListTextElementUI();
+                pListElement.setText("adfasdf");
                 pList.add(pListElement);
             }
         }
+
 
         public const int HTCLIENT = 0x1;
         public const int HTCAPTION = 0x2;

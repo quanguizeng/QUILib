@@ -347,7 +347,7 @@ namespace QUI
             clip.mOldRgn = new Region(rcClip);
             clip.mRgn = new Region(rcItem);
             //graphics.IntersectClip(clip.mRgn);
-            graphics.SetClip(clip.mRgn, CombineMode.Union);
+            graphics.SetClip(clip.mRgn, CombineMode.Replace);
             clip.mGraphics = graphics;
             clip.mRectItem = rcItem;
         }

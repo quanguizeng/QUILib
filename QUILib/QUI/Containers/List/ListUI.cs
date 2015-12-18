@@ -121,6 +121,11 @@ namespace QUI
             {
                 if (mHeader != pControl && mHeader.getCount() == 0)
                 {
+                    {
+                        // 把旧的表头控件属性赋予到新的表头控件
+                        pControl.setBackImage(mHeader.getBackImage());
+                        pControl.setVisible(mHeader.isVisible());
+                    }
                     base.remove(mHeader);
                     mHeader = null;
                     mHeader = (ListHeaderUI)(pControl);
