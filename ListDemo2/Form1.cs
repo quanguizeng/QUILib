@@ -11,7 +11,7 @@ using QUI;
 
 namespace ListDemo2
 {
-    public partial class Form1 : Form,INotifyUI
+    public partial class Form1 : Form, INotifyUI, IListCallbackUI
     {
         public Form1()
         {
@@ -206,6 +206,11 @@ namespace ListDemo2
                     pAccountEdit.setText(pAccountCombo.getText());
                 }
             }
+            {
+                // 获取列表控件
+                mUserList = (ListUI)mManager.findControl("userlist");
+                mUserList.setTextCallback(this);
+            }
         }
 
         public void addSomeListItem()
@@ -214,9 +219,14 @@ namespace ListDemo2
             for (int i = 0; i < 15; i++)
             {
                 ListTextElementUI pListElement = new ListTextElementUI();
-                pListElement.setText("adfasdf");
                 pList.add(pListElement);
             }
+        }
+        public string getItemText(ControlUI pList, int iItem, int iSubItem)
+        {
+            pList.setUserData("SSSS");
+
+            return pList.getUserData();
         }
 
 
@@ -229,5 +239,6 @@ namespace ListDemo2
         protected ControlUI mButtonLogin;
         protected Rectangle mRectClient;
         protected ControlUI mRootNode;
+        protected ListUI mUserList;
     }
 }

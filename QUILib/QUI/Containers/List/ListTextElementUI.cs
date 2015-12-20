@@ -167,7 +167,8 @@ namespace QUI
             int nLinks = mRectLinks.Length;
             for (int i = 0; i < pInfo.mColumns; i++)
             {
-                Rectangle rcItem1 = new Rectangle(pInfo.mListColumn[i].Left, mRectItem.Top, pInfo.mListColumn[i].Right, mRectItem.Bottom);
+
+                Rectangle rcItem1 = new Rectangle(pInfo.mListColumn[i].Left, mRectItem.Top, pInfo.mListColumn[i].Width, mRectItem.Height);
                 int newLeft = rcItem1.Left + pInfo.mRectTextPadding.Left;
                 int newRight = rcItem1.Right - pInfo.mRectTextPadding.Right;
                 int newTop = rcItem1.Top + pInfo.mRectTextPadding.Top;
