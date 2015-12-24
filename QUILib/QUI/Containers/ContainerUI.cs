@@ -376,7 +376,7 @@ namespace QUI
             idx = idx > getCount() - 1 ? getCount() - 1 : idx;
             if (forward)
             {
-                for (int i = 0; i < getCount(); i++)
+                for (int i = idx; i < getCount(); i++)
                 {
                     if (getItemAt(i).getInterface("ListItem") != null &&
                         getItemAt(i).isVisible() &&

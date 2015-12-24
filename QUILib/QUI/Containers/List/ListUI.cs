@@ -42,6 +42,8 @@ namespace QUI
             mListInfo.mShowHtml = false;
             mListInfo.mExpandable = false;
             mListInfo.mMultiExpandable = false;
+
+            mScrollSelect = false;
         }
         ~ListUI()
         {
@@ -348,13 +350,31 @@ namespace QUI
                         switch ((ScrollBarCommands)LOWORD((int)newEvent.mWParam))
                         {
                             case ScrollBarCommands.SB_LINEUP:
-                                selectItem(findSelectable(mCurSel - 1, false));
-                                ensureVisible(mCurSel);
-                                return;
+                                {
+                                    if (mScrollSelect)
+                                    {
+                                        selectItem(findSelectable(mCurSel - 1, false));
+                                        ensureVisible(mCurSel);
+                                    }
+                                    else
+                                    {
+                                        lineUp();
+                                    }
+                                    return;
+                                }
                             case ScrollBarCommands.SB_LINEDOWN:
-                                selectItem(findSelectable(mCurSel + 1, true));
-                                ensureVisible(mCurSel);
-                                return;
+                                {
+                                    if (mScrollSelect)
+                                    {
+                                        selectItem(findSelectable(mCurSel + 1, true));
+                                        ensureVisible(mCurSel);
+                                    }
+                                    else
+                                    {
+                                        lineDown();
+                                    }
+                                    return;
+                                }
                         }
                     }
                     break;
@@ -595,7 +615,8 @@ namespace QUI
         public override void setAttribute(string pstrName, string pstrValue)
         {
             if (pstrName == "header") getHeader().setVisible(pstrValue != "hidden");
-            if (pstrName == "headerbkimage") getHeader().setBkImage(pstrValue);
+            else if (pstrName == "headerbkimage") getHeader().setBkImage(pstrValue);
+            else if (pstrName == "scrollselect") setScrollSelect(pstrValue == "true");
             else if (pstrName == "expanding") setExpanding(pstrValue == "true");
             else if (pstrName == "multiexpanding") setMultiExpanding(pstrValue == "true");
             else if (pstrName == "itemfont") mListInfo.mFontIdx = int.Parse(pstrValue);
@@ -895,8 +916,13 @@ namespace QUI
                 }
             }
         }
+        public void setScrollSelect(bool bScrollSelect)
+        {
+            mScrollSelect = bScrollSelect;
+        }
 
         public const int UILIST_MAX_COLUMNS = 32;
+        protected bool mScrollSelect;
         protected int mCurSel;
         protected int mExpandedItem;
         protected IListCallbackUI mCallback;

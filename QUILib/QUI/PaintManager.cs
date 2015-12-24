@@ -74,6 +74,8 @@ namespace QUI
         public void init(ref Form form)
         {
             mWndPaint = form;
+            mWndPaint.MaximumSize = new Size(Screen.PrimaryScreen.WorkingArea.Width, Screen.PrimaryScreen.WorkingArea.Height);
+
             mPreMessages.Add(this);
         }
         public void needUpdate()
@@ -964,7 +966,10 @@ namespace QUI
                                 mFocus.eventProc(ref newEvent);
                             }
 
-                            mRoot.needUpdate();
+                            if (mRoot != null)
+                            {
+                                mRoot.needUpdate();
+                            }
                         }
                         break;
                     }
@@ -1127,6 +1132,28 @@ namespace QUI
 
                             mMouseCapture = true;
                         }
+
+                        break;
+                    }
+                case WindowMessage.WM_MOUSEWHEEL:
+                    {
+                        Point point = getPoint(ref lParam);
+                        point = getPaintWindow().PointToClient(point);
+                        mLastMousePos = point;
+                        ControlUI pControl = findControl(ref point);
+                        if (pControl == null) break;
+                        IntPtr ptr = (IntPtr)wParam;
+                        int x = (int)ptr;
+                        if (pControl.getManager() != this) break;
+                        int zDelta = HIWORD(x);
+                        TEventUI newEvent = new TEventUI();
+                        newEvent.mType = (int)EventTypeUI.UIEVENT_SCROLLWHEEL;
+                        newEvent.mSender = pControl;
+                        newEvent.mWParam = MAKELPARAM((short)(zDelta < 0 ? ScrollBarCommands.SB_LINEDOWN : ScrollBarCommands.SB_LINEUP), 0);
+                        newEvent.mLParam = lParam;
+                        newEvent.mKeyState = (short)mapKeyState();
+                        newEvent.mTimestamp = GetTickCount();
+                        pControl.eventProc(ref newEvent);
 
                         break;
                     }
@@ -1664,6 +1691,12 @@ namespace QUI
 
             }
             mTimers.Clear();
+        }
+        public int MAKELPARAM(short x,short y)
+        {
+            int result = (x & 0xffff) | ((y & 0xffff) << 16);
+
+            return result;
         }
 
 

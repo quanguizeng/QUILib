@@ -560,11 +560,11 @@ namespace QUI
 
             if (rcItem.IntersectsWith(rc) == false)
             {
-                return false;
+                return true;
             }
             if (rcItem.IntersectsWith(rcPaint) == false)
             {
-                return false;
+                return true;
             }
 
             drawImage(ref graphics, ref hDC, ref data.mBitmap, ref rcItem, ref rcPaint, ref  rcBmpPart, ref rcCorner, data.mAlphaChannel, bFade, bHole);

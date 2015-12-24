@@ -95,11 +95,14 @@ namespace _360SafeDemo
 
             if (handled == false)
             {
+                Cursor x = this.Cursor;
                 if (mManager.messageHandler((uint)m.Msg, ref wParam, ref lParam, ref lRes))
                 {
-                    m.Result = (IntPtr)lRes;
-
-                    return;
+                    if (x == this.Cursor)
+                    {
+                        m.Result = (IntPtr)lRes;
+                        return;
+                    }
                 }
                 if (this.IsDisposed == false)
                 {
@@ -120,7 +123,7 @@ namespace _360SafeDemo
             {
                 if (mManager != null)
                 {
-                    mManager.paintMessageEvent(mRectClient);
+                    mManager.paintMessageEvent(new Rectangle(0, 0, this.Size.Width, this.Size.Height));
                 }
             }
         }
