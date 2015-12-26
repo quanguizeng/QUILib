@@ -614,8 +614,24 @@ namespace QUI
         }
         public static void drawRect(ref Graphics graphics, ref Rectangle rc, int size, int penColor)
         {
-            Pen pen = new Pen(Color.FromArgb(penColor));
-            graphics.DrawRectangle(pen, rc);
+            Pen pen = new Pen(Color.FromArgb(penColor),size);
+            if (size > 1)
+            {
+                Rectangle rc0 = rc;
+                int newLeft = rc0.X+size-1;
+                int newTop =rc0.Y+size-1;
+                int newRight = rc0.Right+1;
+                int newBottom = rc0.Bottom+1;
+                rc0.X = newLeft;
+                rc0.Y = newTop;
+                rc0.Width = newRight - newLeft;
+                rc0.Height = newBottom - newTop;
+                graphics.DrawRectangle(pen, rc0);
+            }
+            else
+            {
+                graphics.DrawRectangle(pen, rc);
+            }
             pen.Dispose();
             pen = null;
         }

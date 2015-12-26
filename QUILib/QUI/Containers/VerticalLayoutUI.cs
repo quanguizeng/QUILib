@@ -37,11 +37,13 @@ namespace QUI
             // mRectInset 为垂直布局控件的边界限制，在使用时，要忽略Right和Bottom属性，而使用Width和Height
             int newLeft = rc.Left + mRectInset.Left;
             int newTop = rc.Top + mRectInset.Top;
-            int newRight = rc.Right - mRectInset.Width;
-            int newBottom = rc.Bottom - mRectInset.Height;
+            int newRight = rc.Right - mRectInset.Right;
+            int newBottom = rc.Bottom - mRectInset.Bottom;
 
-            rc = new Rectangle(newLeft, newTop, newRight - newLeft, newBottom - newTop);
-
+            rc.X = newLeft;
+            rc.Width = newRight - newLeft;
+            rc.Y = newTop;
+            rc.Height = newBottom - newTop;
 
             if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
             {

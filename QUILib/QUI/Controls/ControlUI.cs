@@ -86,7 +86,9 @@ namespace QUI
         }
         public virtual int getControlFlags()
         {
-            return 0;
+            if (!isEnabled()) return 0;
+
+            return (int)ControlFlag.UIFLAG_SETCURSOR | (int)ControlFlag.UIFLAG_TABSTOP;
         }
 
         public virtual bool activate()
@@ -600,7 +602,7 @@ namespace QUI
             mEnabled = enable;
             invalidate();
         }
-        public  void setEnabled0(bool enable = true)
+        public void setEnabled0(bool enable = true)
         {
             if (mEnabled == enable)
             {
@@ -660,10 +662,10 @@ namespace QUI
             {
                 return null;
             }
-            if (data is Rectangle)
+            if (data is Point)
             {
-                Rectangle rc = (Rectangle)data;
-                if ((flags & ControlFlag.UIFIND_HITTEST) != 0 && mRectItem.IntersectsWith(rc) == false)
+                Point rc = (Point)data;
+                if ((flags & ControlFlag.UIFIND_HITTEST) != 0 && mRectItem.Contains(rc) == false)
                 {
                     return null;
                 }
@@ -748,7 +750,7 @@ namespace QUI
                     mManager.getPaintWindow().Cursor = Cursors.Arrow;
                 }
                 return;
-            } 
+            }
 
 
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SETFOCUS)
@@ -780,7 +782,7 @@ namespace QUI
                     mManager.getPaintWindow().Cursor = Cursors.Arrow;
                 }
                 return;
-            } 
+            }
 
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SETFOCUS)
             {
@@ -1042,15 +1044,15 @@ namespace QUI
             {
                 if (mBackColor2 != null && mBackColor2.ToArgb() != 0)
                 {
-                    RenderEngine.drawGradient(ref graphics,ref bitmap, ref mRectItem, mBackColor.ToArgb(), mBackColor2.ToArgb(), true, 16);
+                    RenderEngine.drawGradient(ref graphics, ref bitmap, ref mRectItem, mBackColor.ToArgb(), mBackColor2.ToArgb(), true, 16);
                 }
                 else if ((uint)mBackColor.ToArgb() >= (uint)(0xFF000000))
                 {
-                    RenderEngine.drawColor(ref graphics,ref bitmap, ref mRectPaint, mBackColor.ToArgb());
+                    RenderEngine.drawColor(ref graphics, ref bitmap, ref mRectPaint, mBackColor.ToArgb());
                 }
                 else
                 {
-                    RenderEngine.drawColor(ref graphics,ref bitmap, ref mRectItem, mBackColor.ToArgb());
+                    RenderEngine.drawColor(ref graphics, ref bitmap, ref mRectItem, mBackColor.ToArgb());
                 }
             }
         }
@@ -1060,7 +1062,7 @@ namespace QUI
             {
                 return;
             }
-            if (drawImage(ref graphics,ref bitmap, mBkImage) == false)
+            if (drawImage(ref graphics, ref bitmap, mBkImage) == false)
             {
                 mBkImage = "";
             }
@@ -1079,7 +1081,8 @@ namespace QUI
         {
             if (mBorderColor != null && mBorderColor.ToArgb() != 0 && mBorderSize > 0)
             {
-                RenderEngine.drawRect(ref graphics,ref bitmap, ref mRectItem, mBorderSize, mBorderColor.ToArgb());
+                Rectangle rc = new Rectangle(mRectItem.X, mRectItem.Top, mRectItem.Width - mBorderSize, mRectItem.Height - mBorderSize);
+                RenderEngine.drawRect(ref graphics, ref bitmap, ref rc, mBorderSize, mBorderColor.ToArgb());
             }
         }
         public virtual void doPostPaint(ref Graphics graphics, ref Bitmap bitmap, ref Rectangle rectPaint)

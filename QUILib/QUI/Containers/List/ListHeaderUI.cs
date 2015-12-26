@@ -47,6 +47,26 @@ namespace QUI
 
             return cXY;
         }
+        public override void eventProc(ref TEventUI newEvent)
+        {
+            // 设置鼠标形状
+            if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SETCURSOR)
+            {
+                if (mManager.getPaintWindow().Cursor != Cursors.Arrow)
+                {
+                    mManager.getPaintWindow().Cursor = Cursors.Arrow;
+                }
+                return;
+            }
+
+            base.eventProc(ref newEvent);
+        }
+        public override int getControlFlags()
+        {
+            if (!isEnabled()) return base.getControlFlags();
+
+            return (int)ControlFlag.UIFLAG_SETCURSOR | (int)ControlFlag.UIFLAG_TABSTOP;
+        }
 
 
 

@@ -62,10 +62,6 @@ namespace QUI
             }
             return base.getInterface(name);
         }
-        public override int getControlFlags()
-        {
-            return (int)ControlFlag.UIFLAG_TABSTOP;
-        }
         public void init()
         {
             if (mCurSel < 0) selectItem(0);
@@ -696,17 +692,6 @@ namespace QUI
                 if (!drawImage(ref graphics, ref bitmap, mNormalImage)) mNormalImage = "";
                 else return;
             }
-
-            int dwBorderColor = Color.FromArgb(0xFF, 0x4E, 0xA0, 0xD1).ToArgb();
-            int nBorderSize = 1;
-
-            if ((mButtonState & (int)PaintFlags.UISTATE_HOT) != 0)
-            {
-                dwBorderColor = Color.FromArgb(0xFF, 0x85, 0xE4, 0xFF).ToArgb();
-                nBorderSize = 2;
-            }
-
-            RenderEngine.drawRect(ref graphics, ref bitmap, ref mRectItem, nBorderSize, dwBorderColor);
         }
         public override void paintText(ref Graphics graphics, ref Bitmap bitmap)
         {

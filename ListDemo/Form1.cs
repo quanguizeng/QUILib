@@ -95,16 +95,20 @@ namespace ListDemo
                     }
             }
 
-            if (handled == false)
+            if (handled == false || m.Msg == (int)WindowMessage.WM_MOUSEMOVE)
             {
-                Cursor x = this.Cursor;
                 if (mManager.messageHandler((uint)m.Msg, ref wParam, ref lParam, ref lRes))
                 {
-                    if (x == this.Cursor)
+                    if (m.Msg == (int)WindowMessage.WM_SETCURSOR)
                     {
-                        m.Result = (IntPtr)lRes;
-                        return;
+                        if (this.IsDisposed == false)
+                        {
+                            base.WndProc(ref m);
+                            return;
+                        }
                     }
+                    m.Result = (IntPtr)lRes;
+                    return;
                 }
                 if (this.IsDisposed == false)
                 {
@@ -128,7 +132,6 @@ namespace ListDemo
             Int16 result = (Int16)((x >> 16) & 0xffff);
 
             return result;
-
         }
         protected int onNcHitTest(int msg, object wParam, object lParam, ref bool handled)
         {

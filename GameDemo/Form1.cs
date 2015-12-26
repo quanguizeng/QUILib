@@ -92,14 +92,18 @@ namespace GameDemo
 
             if (handled == false)
             {
-                Cursor x = this.Cursor;
                 if (mManager.messageHandler((uint)m.Msg, ref wParam, ref lParam, ref lRes))
                 {
-                    if (x == this.Cursor)
+                    if (m.Msg == (int)WindowMessage.WM_SETCURSOR)
                     {
-                        m.Result = (IntPtr)lRes;
-                        return;
+                        if (this.IsDisposed == false)
+                        {
+                            base.WndProc(ref m);
+                            return;
+                        }
                     }
+                    m.Result = (IntPtr)lRes;
+                    return;
                 }
                 if (this.IsDisposed == false)
                 {

@@ -88,8 +88,7 @@ namespace QUI
 
             this.StartPosition = FormStartPosition.Manual;
             this.ClientSize = new Size(rc.Width, rc.Height);
-            this.Location = new Point(rc.Left-1, rc.Top);
-
+            this.Location = new Point(rc.Left, rc.Top);
 
             this.Show();
         }
@@ -293,7 +292,17 @@ namespace QUI
             if (handleMessage(m.Msg, ref wParam, ref lParam, ref lRes) == false)
             {
                 base.WndProc(ref m);
+                return;
             }
+            if (m.Msg == (int)WindowMessage.WM_SETCURSOR)
+            {
+                if (this.IsDisposed == false)
+                {
+                    base.WndProc(ref m);
+                    return;
+                }
+            }
+
         }
         protected override void OnPaint(PaintEventArgs e)
         {

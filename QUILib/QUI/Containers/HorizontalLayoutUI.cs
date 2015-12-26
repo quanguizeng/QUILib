@@ -201,7 +201,10 @@ namespace QUI
             int newRight = rc.Right - mRectInset.Right;
             int newBottom = rc.Bottom - mRectInset.Bottom;
 
-            rc = new Rectangle(newLeft, newTop, newRight - newLeft, newBottom - newTop);
+            rc.X = newLeft;
+            rc.Width = newRight - newLeft;
+            rc.Y = newTop;
+            rc.Height = newBottom - newTop;
 
             if (mItems.Count == 0)
             {

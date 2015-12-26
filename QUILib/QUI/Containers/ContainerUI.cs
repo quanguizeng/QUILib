@@ -448,9 +448,15 @@ namespace QUI
             {
                 return;
             }
+            int newLeft = rect.Left + mRectInset.Left;
+            int newTop = rect.Top + mRectInset.Top;
+            int newRight = rect.Right - mRectInset.Width;
+            int newBottom = rect.Bottom - mRectInset.Height;
 
-            Rectangle newRect = new Rectangle(rect.Left + mRectInset.Left, rect.Top + mRectInset.Top, rect.Right - mRectInset.Right, rect.Bottom - mRectInset.Bottom);
-            rect = newRect;
+            rect.X = newLeft;
+            rect.Width = newRight - newLeft;
+            rect.Y = newTop;
+            rect.Height = newBottom - newTop;
 
             for (int i = 0; i < mItems.Count; i++)
             {
@@ -595,7 +601,11 @@ namespace QUI
                 {
                     throw new Exception("inset 参数不为4个");
                 }
-                setInset(new Rectangle(int.Parse(listValue[0]), int.Parse(listValue[1]), int.Parse(listValue[2]), int.Parse(listValue[3])));
+                int left = int.Parse(listValue[0]);
+                int right = int.Parse(listValue[2]);
+                int top = int.Parse(listValue[1]);
+                int bottom = int.Parse(listValue[3]);
+                setInset(new Rectangle(left, top, right - left, bottom-top));
             }
             else if (name == "mousechild") setMouseChildEnabled(value == "true");
             else if (name == "vscrollbar")

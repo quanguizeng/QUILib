@@ -34,14 +34,16 @@ namespace QUI
         }
         public override int getControlFlags()
         {
-            return (int)ControlFlag.UIFLAG_WANTRETURN | ((isEnabled() && mNumLinks > 0) ? (int)ControlFlag.UIFLAG_SETCURSOR : 0);
+            if (!isEnabled()) return base.getControlFlags();
+
+            return (int)ControlFlag.UIFLAG_WANTRETURN | (int)ControlFlag.UIFLAG_SETCURSOR;
         }
         public override void setOwner(ControlUI pOwner)
         {
             base.setOwner(pOwner);
             mOwner = (IListUI)pOwner.getInterface("List");
         }
-        public  string getLinkContent(int iIndex)
+        public string getLinkContent(int iIndex)
         {
             if (iIndex >= 0 && iIndex < mNumLinks)
             {
@@ -80,7 +82,6 @@ namespace QUI
                         return;
                     }
                 }
-                return;
             }
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_BUTTONUP && isEnabled())
             {
