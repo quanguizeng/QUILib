@@ -81,6 +81,8 @@
     <Compile Include="QUI\Controls\TextUI.cs" />
     <Compile Include="QUI\DialogBuilder.cs" />
     <Compile Include="QUI\MarkupNode.cs" />
+    <Compile Include="QUI\ObservableCollection.cs" />
+    <Compile Include="QUI\ObservableCollectionThreadSafe.cs" />
     <Compile Include="QUI\PaintManager.cs" />
     <Compile Include="QUI\RenderEngine.cs" />
   </ItemGroup>

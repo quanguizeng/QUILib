@@ -1,0 +1,10 @@
+D:\projects\QUILib-master\ListDemo2\bin\Debug\ListDemo2.exe.config
+D:\projects\QUILib-master\ListDemo2\obj\Debug\ListDemo2.exe
+D:\projects\QUILib-master\ListDemo2\bin\Debug\ListDemo2.exe
+D:\projects\QUILib-master\ListDemo2\bin\Debug\ListDemo2.pdb
+D:\projects\QUILib-master\ListDemo2\bin\Debug\QUILib.dll
+D:\projects\QUILib-master\ListDemo2\bin\Debug\QUILib.pdb
+D:\projects\QUILib-master\ListDemo2\obj\Debug\ListDemo2.Properties.Resources.resources
+D:\projects\QUILib-master\ListDemo2\obj\Debug\ListDemo2.csproj.GenerateResource.Cache
+D:\projects\QUILib-master\ListDemo2\obj\Debug\ListDemo2.pdb
+D:\projects\QUILib-master\ListDemo2\obj\Debug\ListDemo2.csprojResolveAssemblyReference.cache

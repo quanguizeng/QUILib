@@ -143,6 +143,10 @@ namespace QUI
         }
         public override void setText(string text)
         {
+            if (mText == text)
+            {
+                return;
+            }
             mText = text;
             if (mManager != null) mManager.sendNotify(this, "textchanged");
             invalidate();

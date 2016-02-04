@@ -89,6 +89,7 @@ namespace QUI
             this.StartPosition = FormStartPosition.Manual;
             this.ClientSize = new Size(rc.Width, rc.Height);
             this.Location = new Point(rc.Left, rc.Top);
+            this.TopMost = true;
 
             this.Show();
         }

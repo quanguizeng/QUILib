@@ -35,10 +35,23 @@ namespace QUI
             mHorizontalScrollbar = null;
             mScrollProcess = false;
 
-            mItems = new List<ControlUI>();
+            mItems =new ObservableCollectionThreadSafe<ControlUI>();
+
+            mDelayedDestroy = true;
         }
         ~ContainerUI()
         {
+            mDelayedDestroy = false;
+            removeAll();
+
+            if (mVerticalScrollbar != null)
+            {
+                mVerticalScrollbar = null;
+            }
+            if (mHorizontalScrollbar != null)
+            {
+                mHorizontalScrollbar = null;
+            }
         }
 
         public override string getClass()
@@ -153,6 +166,13 @@ namespace QUI
         public virtual void removeAll()
         {
             // 需要遍历子树，释放子节点内存
+            for (int it = 0; mAutoDestroy && it < mItems.Count; it++)
+            {
+                if (mDelayedDestroy && mManager != null) mManager.addDelayedCleanup(mItems[it]);
+                else mItems[it] = null;
+            }
+            mItems.Clear();
+            needUpdate();
         }
         public override void eventProc(ref TEventUI newEvent)
         {
@@ -541,8 +561,9 @@ namespace QUI
                     RenderClip childClip = new RenderClip();
                     RenderClip.generateClip(ref graphics, rcTemp, ref childClip);
 
-                    foreach (var item in mItems)
+                    for (int i = 0; i < mItems.Count;i++ )
                     {
+                        ControlUI item = mItems[i];
                         if (item.isVisible() == false)
                         {
                             continue;
@@ -1008,7 +1029,7 @@ namespace QUI
             }
         }
 
-        protected List<ControlUI> mItems;
+        protected ObservableCollectionThreadSafe<ControlUI> mItems;
         protected Rectangle mRectInset;
         protected int mChildPadding;
         protected bool mAutoDestroy;
@@ -1017,5 +1038,7 @@ namespace QUI
 
         protected ScrollbarUI mVerticalScrollbar;
         protected ScrollbarUI mHorizontalScrollbar;
+
+        protected bool mDelayedDestroy;
     }
 }

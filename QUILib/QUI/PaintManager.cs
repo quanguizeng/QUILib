@@ -52,9 +52,16 @@ namespace QUI
             mTimers = new List<TimerInfo>();
 
             mGroupList = new Dictionary<string, List<ControlUI>>();
+
+            mDelayedCleanup = new List<ControlUI>();
         }
         ~PaintManagerUI()
         {
+            for (int i = 0; i < mDelayedCleanup.Count; i++)
+            {
+                mDelayedCleanup[i] = null;
+            }
+            mDelayedCleanup.Clear();
             mDefaultAttrHash.Clear();
             mPreMessages.Clear();
             mNotifiers.Clear();
@@ -923,6 +930,9 @@ namespace QUI
                 case WindowMessage.WM_APP + 1:
                     {
                         // 清除控件树
+                        for (int i = 0; i < mDelayedCleanup.Count; i++)
+                            mDelayedCleanup[i] = null;
+                        mDelayedCleanup.Clear();
 
                         break;
                     }
@@ -1697,6 +1707,16 @@ namespace QUI
             int result = (x & 0xffff) | ((y & 0xffff) << 16);
 
             return result;
+        }
+        public void addDelayedCleanup(ControlUI pControl)
+        {
+            if (mWndPaint.IsDisposed == false)
+            {
+                pControl.setManager(this, null);
+                mDelayedCleanup.Add(pControl);
+                PostMessage(mWndPaint.Handle, (int)WindowMessage.WM_APP + 1, 0, 0);
+
+            }
         }
 
 
