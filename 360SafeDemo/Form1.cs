@@ -26,7 +26,7 @@ namespace _360SafeDemo
 
                 {
                     /*** 2. 创建360安全卫士控件树 ***/
-                    DialogBuilder builder = new DialogBuilder();
+                    DialogBuilder builder = new DialogBuilder(true);
                     C360SafeDialogBuilderCallbackEx builderCallback = new C360SafeDialogBuilderCallbackEx();
                     rootNode = builder.createFromFile("skin.xml", builderCallback, mManager);
                 }

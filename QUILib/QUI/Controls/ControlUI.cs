@@ -115,7 +115,7 @@ namespace QUI
         {
             return mText;
         }
-        public virtual void setText(string text)
+        public virtual void setText(string text,bool notify = true)
         {
             mText = text;
         }
@@ -866,6 +866,10 @@ namespace QUI
             else if (name == "bordercolor")
             {
                 value = value.TrimStart('#');
+                if(value.StartsWith("00"))
+                {
+                    value = "FF" + value.Substring(2);
+                }
                 Color color = Color.FromArgb(Convert.ToInt32(value, 16));
                 setBorderColor(color);
             }
@@ -1069,13 +1073,9 @@ namespace QUI
         }
         public virtual void paintStatusImage(ref Graphics graphics, ref Bitmap bitmap)
         {
-
         }
         public virtual void paintText(ref Graphics graphics, ref Bitmap bitmap)
         {
-            //Brush brush = new SolidBrush(Color.DarkGray);
-            //Pen pen = new Pen(brush);
-            //graphics.DrawRectangle(pen, mRectItem);
         }
         public virtual void paintBorder(ref Graphics graphics, ref Bitmap bitmap)
         {

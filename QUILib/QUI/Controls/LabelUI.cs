@@ -16,7 +16,7 @@ namespace QUI
     {
         public LabelUI()
         {
-            mTextStyle = (int)FormatFlags.DT_VCENTER;
+            mTextStyle = (int)FormatFlags.DT_VCENTER | (int)FormatFlags.DT_SINGLELINE;
             mTextColor = Color.FromArgb(0);
             mDisabledTextColor = Color.FromArgb(0);
             mFont = -1;
@@ -119,6 +119,14 @@ namespace QUI
             {
                 return;
             }
+            if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_DBLCLICK)
+            {
+                if (isEnabled())
+                {
+                    mManager.sendNotify(this, "labledbclick");
+                }
+                return;
+            }
 
             base.eventProc(ref newEvent);
         }
@@ -215,13 +223,16 @@ namespace QUI
                 if (mShowHtml)
                 {
                     RenderEngine.drawHtmlText(ref graphics,ref bitmap, ref mManager, ref rc, mText, mDisabledTextColor.ToArgb(), ref rc1, ref s1, ref nLinks, (int)((int)FormatFlags.DT_SINGLELINE | mTextStyle));
-
                 }
                 else
                 {
                     RenderEngine.drawText(ref graphics,ref bitmap, ref mManager, ref rc, mText, mDisabledTextColor.ToArgb(), mFont, (int)((int)FormatFlags.DT_SINGLELINE | mTextStyle));
                 }
             }
+        }
+        public Color getTextColor()
+        {
+            return mTextColor;
         }
 
         protected Color mTextColor;
@@ -231,5 +242,4 @@ namespace QUI
         protected Rectangle mRectTextPadding;
         protected bool mShowHtml;
     }
-
 }

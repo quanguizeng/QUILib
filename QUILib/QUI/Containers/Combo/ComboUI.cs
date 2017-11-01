@@ -98,14 +98,15 @@ namespace QUI
             }
             if (iIndex < 0)
             {
-                iIndex = 0;
+                //iIndex = 0;
+                return false;
             }
             if (iIndex >= mItems.Count)
             {
                 iIndex = mItems.Count - 1;
             }
             pControl = (ControlUI)mItems[iIndex];
-            if (pControl == null || !pControl.isVisible() || !pControl.isEnabled())
+            if (pControl == null)
             {
                 return false;
             }
@@ -135,7 +136,7 @@ namespace QUI
             IListItemUI pListItem = (IListItemUI)pControl.getInterface("ListItem");
             if (pListItem != null)
             {
-                pListItem.setIndex(getCount()); 
+                pListItem.setIndex(getCount());
             }
 
             for (int i = iOrginIndex; i < getCount(); ++i)
@@ -261,6 +262,15 @@ namespace QUI
             {
                 if (isEnabled())
                 {
+                    //if (mManager != null)
+                    //{
+                    //    mManager.sendNotify(this, "buttondown");
+                    //}
+                    if (MyButtonDownEvent != null)
+                    {
+                        MyButtonDownEvent();
+                    }
+
                     activate();
                     mButtonState |= (int)PaintFlags.UISTATE_PUSHED | (int)PaintFlags.UISTATE_CAPTURED;
                 }
@@ -408,7 +418,6 @@ namespace QUI
         {
             mNormalImage = pStrImage;
             invalidate();
-
         }
         public string getHotImage()
         {
@@ -640,12 +649,20 @@ namespace QUI
                 value = value.TrimStart('#');
                 setItemLineColor(Convert.ToInt32(value, 16));
             }
+            else if (name == "disabledcolor")
+            {
+                value = value.TrimStart('#');
+                Color color = Color.FromArgb(Convert.ToInt32(value, 16));
+
+                setDisabledColor(color);
+            }
             else if (name == "itemshowhtml") setItemShowHtml(value == "true");
             else base.setAttribute(name, value);
         }
         public override void doPaint(ref Graphics graphics, ref Bitmap bitmap, Rectangle rcPaint)
         {
             doPaint0(ref graphics, ref bitmap, rcPaint);
+            paintDisabledColor(ref graphics, ref bitmap);
         }
         public override void paintStatusImage(ref Graphics graphics, ref Bitmap bitmap)
         {
@@ -702,7 +719,7 @@ namespace QUI
             int newBottom = rcText.Bottom - mTextPadding.Bottom;
 
             rcText.X = newLeft;
-            rcText.Width = newRight - newLeft;
+            rcText.Width = newRight - newLeft - 20 > 0 ? newRight - newLeft - 20 : newRight - newLeft;
             rcText.Y = newTop;
             rcText.Height = newBottom - newTop;
 
@@ -723,6 +740,17 @@ namespace QUI
                 }
             }
         }
+        public void paintDisabledColor(ref Graphics graphics, ref Bitmap bitmap)
+        {
+            if (mDisabledColor != null && mDisabledColor.ToArgb() != 0 && isEnabled() == false)
+            {
+                RenderEngine.drawColor(ref graphics, ref bitmap, ref mRectPaint, mDisabledColor.ToArgb());
+            }
+        }
+        public void setDisabledColor(Color color)
+        {
+            mDisabledColor = color;
+        }
 
         public ComboWnd mWindow;
 
@@ -739,5 +767,8 @@ namespace QUI
         protected string mDisabledImage;
 
         protected TListInfoUI mListInfo;
+        protected Color mDisabledColor;
+        public delegate void ButtonDownEvent();
+        public ButtonDownEvent MyButtonDownEvent;
     }
 }

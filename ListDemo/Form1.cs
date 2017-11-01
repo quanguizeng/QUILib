@@ -24,7 +24,7 @@ namespace ListDemo
 
                 mManager.init(ref form);
 
-                DialogBuilder builder = new DialogBuilder();
+                DialogBuilder builder = new DialogBuilder(true);
 
                 mRootNode = builder.createFromFile("skin.xml", null, mManager);
                 mManager.attachDialog(ref mRootNode);
@@ -46,8 +46,6 @@ namespace ListDemo
 
                 init();
             }
-
-
         }
 
         ~Form1()
@@ -57,7 +55,6 @@ namespace ListDemo
                 mManager.release();
                 mManager = null;
             }
-
         }
 
         protected override void OnPaint(PaintEventArgs e)

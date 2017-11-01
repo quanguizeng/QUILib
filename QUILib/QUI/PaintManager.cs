@@ -9,6 +9,8 @@ using System.IO;
 using System.Drawing.Imaging;
 using System.Collections;
 using System.Drawing.Drawing2D;
+using ICSharpCode.SharpZipLib.Zip;
+using Utility;
 
 namespace QUI
 {
@@ -40,7 +42,7 @@ namespace QUI
             mMessageFilters = new List<IMessageFilterUI>();
             mNameHash = new Dictionary<string, ControlUI>();
             mCustomFonts = new List<Font>();
-            mImageHash = new Dictionary<string, TImageInfo>();
+            mImages = new Dictionary<string, TImageInfo>();
             mDefaultFont = new Font("微软雅黑", 10, FontStyle.Regular);
             mDefaultFontColor = Color.FromArgb(0xff, 0, 0, 0);
             mDefaultLinkFont = new Font("微软雅黑", 10, FontStyle.Regular | FontStyle.Underline);
@@ -54,6 +56,12 @@ namespace QUI
             mGroupList = new Dictionary<string, List<ControlUI>>();
 
             mDelayedCleanup = new List<ControlUI>();
+
+            mWorkingDir = "";
+
+            mZIPPackageCache = null;
+            mNGPackageCache = null;
+            mFileItems = null;
         }
         ~PaintManagerUI()
         {
@@ -68,6 +76,16 @@ namespace QUI
             mMessageFilters.Clear();
             mNameHash.Clear();
 
+            mWorkingDir = "";
+
+            if (mFileItems != null)
+            {
+                mFileItems.Clear();
+                mFileItems = null;
+            }
+
+            mNGPackageCache = null;
+            mZIPPackageCache = null;
 
             removeAllDefaultAttributeList();
             removeAllFonts();
@@ -97,7 +115,6 @@ namespace QUI
             }
             mWndPaint.Invalidate(rectItem, false);
         }
-
         public Graphics getPaintDC()
         {
             return mDcPaint;
@@ -106,7 +123,6 @@ namespace QUI
         {
             return mWndPaint;
         }
-
         public Point getMousePos()
         {
             return mLastMousePos;
@@ -136,7 +152,6 @@ namespace QUI
         {
             return mRectCaption;
         }
-
         public void setCaptionRect(ref Rectangle rectCaption)
         {
             mRectCaption = rectCaption;
@@ -159,7 +174,6 @@ namespace QUI
         {
             mShowUpdateRect = show;
         }
-
         public bool useParentResource(PaintManagerUI pm)
         {
             if (pm == null)
@@ -186,7 +200,6 @@ namespace QUI
         {
             return mParentResourcePM;
         }
-
         public Color getDefaultDisabledColor()
         {
             if (mParentResourcePM != null)
@@ -441,55 +454,166 @@ namespace QUI
         // 获取指定字体信息 GetFontInfo
 
 
-        public TImageInfo getImage(string bitmap)
+        public MemoryStream getFileFromPackage(string fileName)
         {
-            if (bitmap == null || bitmap == "")
+            if (mZIPPackageCache != null)
             {
-                throw new Exception("文件名不能为空");
+                return getFileFromZip(ref mZIPPackageCache, fileName);
+            }
+            else if (mNGPackageCache != null)
+            {
+                return PackFilesHelper.getFileFromPackStream(ref mNGPackageCache, ref mFileItems, fileName);
+            }
+
+            // 触发崩溃
+            return null;
+        }
+        public MemoryStream getFileFromZip(ref ZipInputStream zipStream, string fileName)
+        {
+            MemoryStream cache = null;
+            ZipEntry fileItem;
+
+            while ((fileItem = zipStream.GetNextEntry()) != null)
+            {
+                if (fileItem.Name.Contains("FlightState.xml"))
+                {
+                    int sss = 0;
+                }
+                if (fileName == fileItem.Name)
+                {
+                    cache = new MemoryStream();
+
+                    int size = 2048;
+                    byte[] buffer = new byte[2048];
+
+                    while (true)
+                    {
+                        size = zipStream.Read(buffer, 0, buffer.Length);
+                        if (size > 0)
+                        {
+                            cache.Write(buffer, 0, size);
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    cache.Seek(0, SeekOrigin.Begin);
+                    buffer = null;
+
+                    fileItem.Clone();
+
+                    break;
+                }
+                fileItem.Clone();
+            }
+
+            return cache;
+        }
+        public TImageInfo getImage(string fileName)
+        {
+            if (mParentResourcePM != null)
+            {
+                return getImage(fileName);
+            }
+            if (fileName == null || fileName == "")
+            {
+                return null;
             }
             if (mParentResourcePM != null)
             {
-                return mParentResourcePM.getImage(bitmap);
+                return mParentResourcePM.getImage(fileName);
             }
-            if (mImageHash.ContainsKey(bitmap) == false)
+            if (mImages.ContainsKey(fileName) == false)
             {
-                if (addImage(bitmap) != null)
+                if (mWorkingDir != "" && hasPackageCache())
                 {
-                    return mImageHash[bitmap];
+                    MemoryStream cache = getFileFromPackage(fileName);
+                    if (cache == null)
+                    {
+                        throw new Exception("");
+                    }
+                    if (addImage(fileName, ref cache) == null)
+                    {
+                        throw new Exception("");
+                    }
+                    cache.Close();
+                    cache.Dispose();
+                    cache = null;
+                }
+                else if (mWorkingDir != "" && hasPackageCache() == false)
+                {
+                    if (addImage(mWorkingDir + fileName) == null)
+                    {
+                        throw new Exception("");
+                    }
+                }
+                else if (addImage(fileName) == null)
+                {
+                    throw new Exception("");
                 }
             }
 
-            return mImageHash[bitmap];
+            return mImages[fileName];
         }
-        public TImageInfo getImageEx(string bitmap, string type = "", int mask = 0)
+        public TImageInfo getImageEx(string fileName, string type = "", int mask = 0)
         {
-            if (bitmap == null || bitmap == "")
+            if (mParentResourcePM != null)
+            {
+                return mParentResourcePM.getImageEx(fileName, type, mask);
+            }
+            if (fileName == null || fileName == "")
             {
                 return null;
             }
 
-            if (mImageHash.ContainsKey(bitmap) == false)
+            if (mImages.ContainsKey(fileName) == false)
             {
-                return addImage(bitmap, type, mask);
+                if (getWorkingDir() != "" && hasPackageCache())
+                {
+                    MemoryStream cache = getFileFromPackage(fileName);
+                    if (cache == null)
+                    {
+                        throw new Exception("");
+                    }
+                    if (addImage(fileName, ref cache, type, mask) == null)
+                    {
+                        throw new Exception("");
+                    }
+
+                    cache.Close();
+                    cache.Dispose();
+                    cache = null;
+                }
+                else if (getWorkingDir() != "" && hasPackageCache() == false)
+                {
+                    if (addImage(getWorkingDir() + fileName, type, mask) == null)
+                    {
+                        throw new Exception("");
+                    }
+                }
+                else if (addImage(fileName, type, mask) == null)
+                {
+                    throw new Exception("");
+                }
             }
 
-            return mImageHash[bitmap];
+            return mImages[fileName];
         }
-        public TImageInfo addImage(string bitmapFileName, string type = "", int mask = 0)
+        public TImageInfo addImage(string fileName, string type = "", int mask = 0)
         {
-            if (File.Exists(bitmapFileName) == false)
+            if (File.Exists(fileName) == false)
             {
-                string msg = string.Format("找不到该图片\r\n{0}", bitmapFileName);
-                MessageBox.Show(msg);
-                return null;
+                throw new Exception("");
             }
-            if (mImageHash.ContainsKey(bitmapFileName) == true)
+            if (mImages.ContainsKey(fileName) == true)
             {
-                return mImageHash[bitmapFileName];
+                return mImages[fileName];
             }
 
             TImageInfo image = new TImageInfo();
-            Bitmap bitmap = new Bitmap(bitmapFileName);
+            Bitmap bitmap = new Bitmap(fileName);
             bitmap.MakeTransparent(Color.FromArgb(mask));
 
             image.mBitmap = bitmap;
@@ -497,29 +621,50 @@ namespace QUI
             image.mY = bitmap.Height;
             image.mAlphaChannel = false;
 
-            mImageHash.Add(bitmapFileName, image);
+            mImages.Add(Path.GetFileName(fileName), image);
 
             return image;
         }
-        public bool removeImage(string bitmapFileName)
+        public TImageInfo addImage(string fileName, ref MemoryStream imageCache, string type = "", int mask = 0)
         {
-            if (mImageHash.ContainsKey(bitmapFileName) == false)
+            if (mImages.ContainsKey(fileName) == true)
+            {
+                throw new Exception("");
+            }
+
+            TImageInfo image = new TImageInfo();
+            Bitmap bitmap = new Bitmap(imageCache);
+            bitmap.MakeTransparent(Color.FromArgb(mask));
+
+            image.mBitmap = bitmap;
+            image.mX = bitmap.Width;
+            image.mY = bitmap.Height;
+            image.mAlphaChannel = false;
+
+            mImages.Add(Path.GetFileName(fileName), image);
+
+            return image;
+        }
+        public bool removeImage(string fileName)
+        {
+            if (mImages.ContainsKey(fileName) == false)
             {
                 return false;
             }
 
-            return mImageHash.Remove(bitmapFileName);
+            mImages[fileName].mBitmap.Dispose();
+
+            return mImages.Remove(fileName);
         }
         public void removeAllImages()
         {
-            foreach (var b in mImageHash)
+            foreach (var b in mImages)
             {
                 b.Value.mBitmap.Dispose();
             }
 
-            mImageHash.Clear();
+            mImages.Clear();
         }
-
         public void addDefaultAttributeList(string controlName, string attrList)
         {
             if (mDefaultAttrHash.ContainsKey(controlName) == false)
@@ -563,7 +708,6 @@ namespace QUI
 
             return true;
         }
-
         public bool attachDialog(ref ControlUI control)
         {
             if (mWndPaint == null)
@@ -644,9 +788,7 @@ namespace QUI
                 mFocus.eventProc(ref newEvent);
                 sendNotify(mFocus, "setfocus");
             }
-
         }
-
         public bool setNextTabControl(bool forward = true)
         {
             if (mUpdateNeeded && forward)
@@ -887,22 +1029,19 @@ namespace QUI
             }
             WindowMessage msgID = (WindowMessage)msg;
 
+            // 输出调试信息
+            switch (msgID)
             {
-                // 输出调试信息
+                case WindowMessage.WM_NCPAINT:
+                case WindowMessage.WM_NCHITTEST:
+                case WindowMessage.WM_SETCURSOR:
+                    break;
+                default:
+                    {
+                        //Console.WriteLine("MSG:{0},{1}", msgID, GetTickCount());
 
-                switch (msgID)
-                {
-                    case WindowMessage.WM_NCPAINT:
-                    case WindowMessage.WM_NCHITTEST:
-                    case WindowMessage.WM_SETCURSOR:
                         break;
-                    default:
-                        {
-                            //Console.WriteLine("MSG:{0},{1}", msgID, GetTickCount());
-
-                            break;
-                        }
-                }
+                    }
             }
 
             if (mWndPaint == null)
@@ -910,17 +1049,15 @@ namespace QUI
                 return false;
             }
 
+            // 遍历事件侦听器
+            foreach (var filter in mMessageFilters)
             {
-                // 遍历事件侦听器
-                foreach (var filter in mMessageFilters)
+                bool handled = false;
+                int result = filter.MessageHandler(msg, wParam, lParam, ref handled);
+                if (handled)
                 {
-                    bool handled = false;
-                    int result = filter.MessageHandler(msg, wParam, lParam, ref handled);
-                    if (handled)
-                    {
-                        lRes = result;
-                        return true;
-                    }
+                    lRes = result;
+                    return true;
                 }
             }
 
@@ -1011,6 +1148,7 @@ namespace QUI
                         {
                             // 产生鼠标消息发送给控件,鼠标离开，鼠标进入，鼠标移动三个消息
                             Point point = getPoint(ref lParam);
+                            mLastMousePos = point;
                             ControlUI curHover = findControl(ref point);
                             if (curHover != null && curHover.getManager() != this)
                             {
@@ -1147,6 +1285,16 @@ namespace QUI
                     }
                 case WindowMessage.WM_MOUSEWHEEL:
                     {
+                        {
+                            if (mFocus is EditUI)
+                            {
+                                ((EditUI)mFocus).closeEditWnd();
+                            }
+                            if (mFocus is NumericUpDownUI)
+                            {
+                                ((NumericUpDownUI)mFocus).closeEditWnd();
+                            }
+                        }
                         Point point = getPoint(ref lParam);
                         point = getPaintWindow().PointToClient(point);
                         mLastMousePos = point;
@@ -1266,10 +1414,6 @@ namespace QUI
 
                         return true;
                     }
-                //case WindowMessage.WM_PAINT:
-                //    {
-                //        return true;
-                //    }
             }
 
             return false;
@@ -1318,12 +1462,10 @@ namespace QUI
                 }
             }
 
+            // 设置第一个控件获得焦点
+            if (mFocusNeeded)
             {
-                // 设置第一个控件获得焦点
-                if (mFocusNeeded)
-                {
-                    setNextTabControl();
-                }
+                setNextTabControl();
             }
 
             {
@@ -1489,11 +1631,8 @@ namespace QUI
         }
         protected static ControlUI findControlFromCount(ref ControlUI control, ref object data)
         {
-
             return null;
-
         }
-
         protected static ControlUI findControlFromPoint(ref ControlUI control, ref object data)
         {
             Point point = (Point)data;
@@ -1527,7 +1666,6 @@ namespace QUI
             }
 
             return null;
-
         }
         protected static ControlUI findControlFromShortcut(ref ControlUI control, ref object data)
         {
@@ -1598,13 +1736,13 @@ namespace QUI
                 mRenderBufferManager = null;
             }
 
-            if (mImageHash != null)
+            if (mImages != null)
             {
-                foreach (var image in mImageHash)
+                foreach (var image in mImages)
                 {
                     image.Value.mBitmap.Dispose();
                 }
-                mImageHash.Clear();
+                mImages.Clear();
             }
 
             if (mCustomFonts != null)
@@ -1698,11 +1836,10 @@ namespace QUI
                 {
                     i.mTimer.Dispose();
                 }
-
             }
             mTimers.Clear();
         }
-        public int MAKELPARAM(short x,short y)
+        public int MAKELPARAM(short x, short y)
         {
             int result = (x & 0xffff) | ((y & 0xffff) << 16);
 
@@ -1715,10 +1852,39 @@ namespace QUI
                 pControl.setManager(this, null);
                 mDelayedCleanup.Add(pControl);
                 PostMessage(mWndPaint.Handle, (int)WindowMessage.WM_APP + 1, 0, 0);
-
             }
         }
+        public void setWorkingDir(string dir)
+        {
+            if (Directory.Exists(dir.Trim()) == false)
+            {
+                throw new Exception("");
+            }
 
+            mWorkingDir = dir.Trim();
+            if (mWorkingDir.EndsWith("\\") == false)
+            {
+                mWorkingDir += '\\';
+            }
+        }
+        public string getWorkingDir()
+        {
+            return mWorkingDir;
+        }
+        public void setZIPPackageCache(ref ZipInputStream cache, ref FileStream fileStream)
+        {
+            mZIPPackageCache = cache;
+            mZIPFileStream = fileStream;
+        }
+        public void setNGPackageCache(ref MemoryStream cache)
+        {
+            mNGPackageCache = cache;
+            mFileItems = PackFilesHelper.parseFileItems(ref cache);
+        }
+        public bool hasPackageCache()
+        {
+            return mZIPPackageCache != null || mNGPackageCache != null;
+        }
 
 
         protected Form mWndPaint;
@@ -1767,7 +1933,7 @@ namespace QUI
         protected Color mDefaultLinkFontHoverColor;
         protected List<Font> mCustomFonts;
 
-        protected Dictionary<string, TImageInfo> mImageHash;
+        protected Dictionary<string, TImageInfo> mImages;
         protected Dictionary<string, string> mDefaultAttrHash;
 
         protected static List<PaintManagerUI> mPreMessages;
@@ -1775,5 +1941,13 @@ namespace QUI
         public RenderBufferManager mRenderBufferManager;
 
         protected Dictionary<string, List<ControlUI>> mGroupList;
+
+        private string mWorkingDir;
+
+        private ZipInputStream mZIPPackageCache;
+        private FileStream mZIPFileStream;
+        private MemoryStream mNGPackageCache;
+
+        private List<PackFileItem> mFileItems;
     }
 }

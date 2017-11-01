@@ -158,7 +158,7 @@ namespace QUI
         {
             return mGroupName;
         }
-        public void selected(bool bSelected)
+        public void selected(bool bSelected,bool notify = true)
         {
             if (mSelected == bSelected) return;
             mSelected = bSelected;
@@ -180,12 +180,18 @@ namespace QUI
                                 pControl.selected(false);
                             }
                         }
-                        mManager.sendNotify(this, "selectchanged");
+                        if (notify)
+                        {
+                            mManager.sendNotify(this, "selectchanged");
+                        }
                     }
                 }
                 else
                 {
-                    mManager.sendNotify(this, "selectchanged");
+                    if (notify)
+                    {
+                        mManager.sendNotify(this, "selectchanged");
+                    }
                 }
             }
             invalidate();

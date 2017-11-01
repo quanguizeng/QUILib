@@ -369,7 +369,7 @@ namespace QUI
             mBkDisabledImage = strImage;
             invalidate();
         }
-       public override  void setPos(Rectangle rc)
+        public override void setPos(Rectangle rc)
         {
             base.setPos(rc);
 
@@ -619,11 +619,17 @@ namespace QUI
                 {
                     if (!mHorizontal)
                     {
-                        mLastScrollOffset = (newEvent.mMousePos.Y - mLastMouse.Y) * mRange / (mRectItem.Bottom - mRectItem.Top - mRectThumb.Bottom + mRectThumb.Top - 2 * mXYFixed.Width);
+                        if ((mRectItem.Bottom - mRectItem.Top - mRectThumb.Bottom + mRectThumb.Top - 2 * mXYFixed.Width) != 0)
+                        {
+                            mLastScrollOffset = (newEvent.mMousePos.Y - mLastMouse.Y) * mRange / (mRectItem.Bottom - mRectItem.Top - mRectThumb.Bottom + mRectThumb.Top - 2 * mXYFixed.Width);
+                        }
                     }
                     else
                     {
-                        mLastScrollOffset = (newEvent.mMousePos.X - mLastMouse.X) * mRange / (mRectItem.Right - mRectItem.Left - mRectThumb.Right + mRectThumb.Left - 2 * mXYFixed.Height);
+                        if ((mRectItem.Right - mRectItem.Left - mRectThumb.Right + mRectThumb.Left - 2 * mXYFixed.Height) != 0)
+                        {
+                            mLastScrollOffset = (newEvent.mMousePos.X - mLastMouse.X) * mRange / (mRectItem.Right - mRectItem.Left - mRectThumb.Right + mRectThumb.Left - 2 * mXYFixed.Height);
+                        }
                     }
                 }
                 else
@@ -708,9 +714,8 @@ namespace QUI
                 else
                 {
                     if (mScrollRepeatDelay <= 5) return;
-                    Point pt = new Point();
-                    pt = Control.MousePosition;
-                    pt = mManager.getPaintWindow().PointToClient(pt);
+                    Point pt;
+                    pt = mManager.getPaintWindow().PointToClient(Control.MousePosition);
                     if (!mHorizontal)
                     {
                         if (pt.Y < mRectThumb.Top)
@@ -872,7 +877,7 @@ namespace QUI
             {
                 setLineSize(int.Parse(value));
             }
-            else if (name == "range")
+            else if (name == "min")
             {
                 setScrollRange(int.Parse(value));
             }

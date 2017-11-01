@@ -103,7 +103,7 @@ namespace QUI
             mOwner.mButtonState &= ~(int)PaintFlags.UISTATE_PUSHED;
             mOwner.invalidate();
         }
-        public bool handleMessage(int uMsg, ref object wParam, ref object lParam,ref int lRes)
+        public bool onMessageHandle(int uMsg, ref object wParam, ref object lParam,ref int lRes)
         {
             if (uMsg == (int)WindowMessage.WM_CREATE)
             {
@@ -199,7 +199,7 @@ namespace QUI
                 int zDelta = (int)(short)HIWORD(c);
                 TEventUI newEvent = new TEventUI();
                 newEvent.mType = (int)EVENTTYPE_UI.UIEVENT_SCROLLWHEEL;
-                newEvent.mWParam = MAKELONG(zDelta < 0 ? (int)ScrollBarCommands.SB_LINEDOWN : (int)ScrollBarCommands.SB_LINEUP, 0);
+                newEvent.mWParam = makeLong(zDelta < 0 ? (int)ScrollBarCommands.SB_LINEDOWN : (int)ScrollBarCommands.SB_LINEUP, 0);
                 newEvent.mLParam = lParam;
                 newEvent.mTimestamp = PaintManagerUI.GetTickCount();
                 mOwner.eventProc(ref newEvent);
@@ -244,7 +244,7 @@ namespace QUI
                 this.Dispose();
             }
         }
-        public int MAKELONG(int x, int y)
+        public int makeLong(int x, int y)
         {
             int result = (((Int16)x) & 0xffff) | ((((Int16)y) & 0xffff) >> 16);
 
@@ -290,7 +290,7 @@ namespace QUI
             object wParam = m.WParam;
             object lParam = m.LParam;
 
-            if (handleMessage(m.Msg, ref wParam, ref lParam, ref lRes) == false)
+            if (onMessageHandle(m.Msg, ref wParam, ref lParam, ref lRes) == false)
             {
                 base.WndProc(ref m);
                 return;

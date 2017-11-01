@@ -88,7 +88,7 @@ namespace QUI
                 setHorizontal(value == "true");
             }
             else if (name == "min") setMinValue(int.Parse(value));
-            else if (name == "max") setMaxValue(int.Parse(value));
+            else if (name == "min") setMaxValue(int.Parse(value));
             else if (name == "value") setValue(int.Parse(value));
             else base.setAttribute(name, value);
         }
@@ -105,20 +105,20 @@ namespace QUI
             if (mValue > mMax) mValue = mMax;
             if (mValue < mMin) mValue = mMin;
 
-            Rectangle rc = new Rectangle();
-            if (mHorizontal)
-            {
-                rc.Width = (mValue - mMin) * (mRectItem.Right - mRectItem.Left) / (mMax - mMin) - rc.Left;
-                rc.Height = mRectItem.Bottom - mRectItem.Top - rc.Top;
-            }
-            else
-            {
-                rc.Height = (mRectItem.Bottom - mRectItem.Top) - ((mRectItem.Bottom - mRectItem.Top) * (mMax - mValue) / (mMax - mMin));
-                rc.Width = mRectItem.Right - mRectItem.Left - rc.Left;
-            }
-
             if (mFgImage != "")
             {
+                Rectangle rc = new Rectangle(0, 0, 0, 0);
+                if (mHorizontal)
+                {
+                    rc.Width = (mValue - mMin) * (mRectItem.Right - mRectItem.Left) / (mMax - mMin) - rc.Left;
+                    rc.Height = mRectItem.Bottom - mRectItem.Top - rc.Top;
+                }
+                else
+                {
+                    rc.Height = (mRectItem.Bottom - mRectItem.Top) - ((mRectItem.Bottom - mRectItem.Top) * (mMax - mValue) / (mMax - mMin));
+                    rc.Width = mRectItem.Right - mRectItem.Left - rc.Left;
+                }
+
                 mFgImageModify = "";
                 mFgImageModify = string.Format("dest='{0},{1},{2},{3}'", rc.Left, rc.Top, rc.Right, rc.Bottom);
 
@@ -131,10 +131,6 @@ namespace QUI
                     return;
                 }
             }
-
-            uint dwBorderColor = 0xFF4EA0D1;
-            int nBorderSize = 1;
-            RenderEngine.drawRect(ref graphics, ref mRectItem, nBorderSize, (int)dwBorderColor);
         }
 
         protected bool mHorizontal;

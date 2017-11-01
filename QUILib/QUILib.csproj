@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ICSharpCode.SharpZipLib">
+      <HintPath>..\..\SharpZipLib_0860_Bin\net-20\ICSharpCode.SharpZipLib.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
@@ -41,6 +44,10 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="Utility, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Utility\Utility\bin\Debug\Confused\Utility.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,6 +81,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="QUI\Controls\LabelUI.cs" />
+    <Compile Include="QUI\Controls\NumericUpDownUI.cs" />
+    <Compile Include="QUI\Controls\NumericUpDownWnd.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="QUI\Controls\OptionUI.cs" />
     <Compile Include="QUI\Controls\ProgressUI.cs" />
     <Compile Include="QUI\Controls\ScrollbarUI.cs" />

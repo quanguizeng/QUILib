@@ -8,3 +8,8 @@ D:\工作\开发日记\2015-12-16\QUILib\bin\QUILib.pdb
 D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.dll
 D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.pdb
 D:\工作\开发日记\2015-12-16\QUILib\QUILib\obj\Debug\QUILib.csprojResolveAssemblyReference.cache
+D:\projects\QUILib-master\bin\QUILib.dll
+D:\projects\QUILib-master\bin\QUILib.pdb
+D:\projects\QUILib-master\QUILib\obj\Debug\QUILib.dll
+D:\projects\QUILib-master\QUILib\obj\Debug\QUILib.pdb
+D:\projects\QUILib-master\QUILib\obj\Debug\QUILib.csprojResolveAssemblyReference.cache

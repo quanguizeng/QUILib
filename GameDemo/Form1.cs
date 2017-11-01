@@ -23,7 +23,7 @@ namespace GameDemo
 
                 mManager.init(ref form);
 
-                DialogBuilder builder = new DialogBuilder();
+                DialogBuilder builder = new DialogBuilder(true);
 
                 ControlUI rootNode = builder.createFromFile("login.xml", null, mManager);
                 mManager.attachDialog(ref rootNode);

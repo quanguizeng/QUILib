@@ -325,48 +325,6 @@ namespace QUI
         DT_END_ELLIPSIS = 0x00008000
     }
 
-    public class RenderClip
-    {
-        public RenderClip()
-        {
-
-        }
-        ~RenderClip()
-        {
-            //mGraphics.Dispose();
-            //mRgn.Dispose();
-            //mOldRgn.Dispose();
-            //mGraphics = null;
-            //mRgn = null;
-            //mOldRgn = null;
-        }
-
-        public static void generateClip(ref Graphics graphics, Rectangle rcItem, ref RenderClip clip)
-        {
-            RectangleF rcClip = graphics.ClipBounds;
-            clip.mOldRgn = new Region(rcClip);
-            clip.mRgn = new Region(rcItem);
-            //graphics.IntersectClip(clip.mRgn);
-            graphics.SetClip(clip.mRgn, CombineMode.Replace);
-            clip.mGraphics = graphics;
-            clip.mRectItem = rcItem;
-        }
-        public static void useOldClipBegin(ref Graphics graphics, ref RenderClip clip)
-        {
-            graphics.Clip = clip.mOldRgn;
-        }
-        public static void useOldClipEnd(ref Graphics graphics, ref RenderClip clip)
-        {
-            graphics.Clip = clip.mRgn;
-        }
-
-        public Rectangle mRectItem;
-        public Graphics mGraphics;
-        public Region mRgn;
-        public Region mOldRgn;
-
-    }
-
     public class RenderBufferManager
     {
 

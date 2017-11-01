@@ -84,7 +84,7 @@ namespace QUI
             int cxWidth = (rc.Right - rc.Left) / mColumns;
             if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
             {
-                cxWidth = (rc.Right - rc.Left + mHorizontalScrollbar.getScrollRange()) / mColumns; ;
+                cxWidth = (rc.Right - rc.Left + mHorizontalScrollbar.getScrollRange()) / mColumns;
             }
 
             int cyHeight = 0;
@@ -113,7 +113,7 @@ namespace QUI
                 Size szAvailable;
                 Size szTile;
                 // Determine size
-                Rectangle rcTile = new Rectangle(ptTile.X, ptTile.Y, ptTile.X + cxWidth, ptTile.Y);
+                Rectangle rcTile = new Rectangle(ptTile.X, ptTile.Y, cxWidth, 0);
                 if ((iCount % mColumns) == 0)
                 {
                     int iIndex = iCount;
@@ -175,8 +175,19 @@ namespace QUI
                 if (szTile.Width > pControl.getMaxWidth()) szTile.Width = pControl.getMaxWidth();
                 if (szTile.Height < pControl.getMinHeight()) szTile.Height = pControl.getMinHeight();
                 if (szTile.Height > pControl.getMaxHeight()) szTile.Height = pControl.getMaxHeight();
-                Rectangle rcPos = new Rectangle((rcTile.Left + rcTile.Right - szTile.Width) / 2, (rcTile.Top + rcTile.Bottom - szTile.Height) / 2,
-                    (rcTile.Left + rcTile.Right - szTile.Width) / 2 + szTile.Width, (rcTile.Top + rcTile.Bottom - szTile.Height) / 2 + szTile.Height);
+                int newX, newY, newWidth, newHeight;
+                {
+                    newX = (rcTile.Left + rcTile.Right - szTile.Width) / 2;
+                    if(newX < rcTile.Left)
+                    {
+                        newX = rcTile.Left;
+                    }
+                    newY = (rcTile.Top + rcTile.Bottom - szTile.Height) / 2;
+                    newWidth = szTile.Width;
+                    newHeight = szTile.Height;
+                }
+                Rectangle rcPos = new Rectangle(newX, newY,
+                    newWidth, newHeight);
                 pControl.setPos(rcPos);
 
                 if ((++iCount % mColumns) == 0)
@@ -199,6 +210,4 @@ namespace QUI
 
         protected int mColumns;
     }
-
-
 }

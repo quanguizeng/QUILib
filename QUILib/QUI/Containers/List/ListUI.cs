@@ -209,7 +209,7 @@ namespace QUI
                     pListItem.setIndex(pListItem.getIndex() - 1);
                 }
             }
-
+            mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
             selectItem(findSelectable(mCurSel, false));
             ensureVisible(mCurSel);
 
@@ -232,8 +232,10 @@ namespace QUI
                 }
             }
 
+            mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
             selectItem(findSelectable(mCurSel, false));
             ensureVisible(mCurSel);
+            needParentUpdate();
 
             return true;
         }
@@ -797,124 +799,6 @@ namespace QUI
         public override ScrollbarUI getHorizontalScrollbar()
         {
             return mList.getHorizontalScrollbar();
-        }
-        public override void doPaint(ref Graphics graphics, ref Bitmap bitmap, Rectangle rectPaint)
-        {
-            Rectangle rcTemp;
-            if (rectPaint.IntersectsWith(mRectItem) == false)
-            {
-                return;
-            }
-            rcTemp = rectPaint;
-            rcTemp.Intersect(mRectItem);
-
-            RenderClip clip = new RenderClip();
-            RenderClip.generateClip(ref graphics, rcTemp, ref clip);
-
-            base.doPaint(ref graphics, ref bitmap, rectPaint);
-
-            if (mItems.Count > 0)
-            {
-                Rectangle rc = mRectItem;
-                int newLeft = rc.Left + mRectInset.Left;
-                int newRight = rc.Right - mRectInset.Right;
-                int newTop = rc.Top + mRectInset.Top;
-                int newBottom = rc.Bottom - mRectInset.Bottom;
-
-                rc.X = newLeft;
-                rc.Width = newRight - newLeft;
-                rc.Y = newTop;
-                rc.Height = newBottom - newTop;
-
-                // 绘制滚动条
-                if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
-                {
-                    rc.Width = rc.Right - mVerticalScrollbar.getFixedWidth() - rc.Left;
-                }
-                if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
-                {
-                    rc.Height = rc.Bottom - mHorizontalScrollbar.getFixedHeight() - rc.Top;
-                }
-
-                // 绘制子控件
-                if (rectPaint.IntersectsWith(rc) == false)
-                {
-                    for (int i = mItems.Count-1; i >= 0; i--)
-                    {
-                        ControlUI item = mItems[i];
-                        if (item.isVisible() == false)
-                        {
-                            continue;
-                        }
-                        if (rectPaint.IntersectsWith(item.getPos()) == false)
-                        {
-                            continue;
-                        }
-                        if (item.isFloat())
-                        {
-                            if (mRectItem.IntersectsWith(item.getPos()) == false)
-                            {
-                                continue;
-                            }
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
-                        }
-                    }
-                }
-                else
-                {
-                    RenderClip childClip = new RenderClip();
-                    RenderClip.generateClip(ref graphics, rcTemp, ref childClip);
-
-                    for (int i = mItems.Count-1; i >= 0; i--)
-                    {
-                        ControlUI item = mItems[i];
-                        if (item.isVisible() == false)
-                        {
-                            continue;
-                        }
-                        if (rectPaint.IntersectsWith(item.getPos()) == false)
-                        {
-                            continue;
-                        }
-                        if (item.isFloat())
-                        {
-                            if (mRectItem.IntersectsWith(item.getPos()) == false)
-                            {
-                                continue;
-                            }
-                            RenderClip.useOldClipBegin(ref graphics, ref childClip);
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
-                            RenderClip.useOldClipEnd(ref graphics, ref childClip);
-                        }
-                        else
-                        {
-                            if (rc.IntersectsWith(item.getPos()) == false)
-                            {
-                                continue;
-                            }
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
-                        }
-                    }
-                }
-            }
-
-            if (mVerticalScrollbar != null &&
-                mVerticalScrollbar.isVisible())
-            {
-                if (rectPaint.IntersectsWith(mVerticalScrollbar.getPos()))
-                {
-                    mVerticalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
-                }
-            }
-
-            if (mHorizontalScrollbar != null &&
-                mHorizontalScrollbar.isVisible())
-            {
-                if (rectPaint.IntersectsWith(mHorizontalScrollbar.getPos()))
-                {
-                    mHorizontalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
-                }
-            }
         }
         public void setScrollSelect(bool bScrollSelect)
         {

@@ -51,9 +51,6 @@ namespace QUI
             if (mManager != null) mManager.sendNotify(this, "click");
             return true;
         }
-        public override void setEnabled(bool enable = true)
-        {
-        }
         public override void eventProc(ref TEventUI param)
         {
             if (!isMouseEnabled() && param.mType > (int)EVENTTYPE_UI.UIEVENT__MOUSEBEGIN && param.mType < (int)EVENTTYPE_UI.UIEVENT__MOUSEEND)
@@ -73,16 +70,24 @@ namespace QUI
             }
             if (param.mType == (int)EVENTTYPE_UI.UIEVENT_BUTTONDOWN || param.mType == (int)EVENTTYPE_UI.UIEVENT_DBLCLICK)
             {
+                if (isEnabled() == false)
+                {
+                    return;
+                }
+
                 if (mRectItem.Contains(param.mMousePos))
                 {
                     mButtonState |= (int)ControlFlag.UISTATE_PUSHED | (int)ControlFlag.UISTATE_CAPTURED;
                     invalidate();
-
                 }
                 return;
             }
             if (param.mType == (int)EVENTTYPE_UI.UIEVENT_MOUSEMOVE)
             {
+                if (isEnabled() == false)
+                {
+                    return;
+                }
                 if ((mButtonState & (int)ControlFlag.UISTATE_CAPTURED) != 0)
                 {
                     if (mRectItem.Contains(param.mMousePos))
@@ -99,6 +104,11 @@ namespace QUI
             }
             if (param.mType == (int)EVENTTYPE_UI.UIEVENT_BUTTONUP)
             {
+                if (isEnabled() == false)
+                {
+                    return;
+                }
+
                 if ((mButtonState & (int)ControlFlag.UISTATE_CAPTURED) != 0)
                 {
                     if (mRectItem.Contains(param.mMousePos))
@@ -183,7 +193,6 @@ namespace QUI
             mDisabledImage = strImage;
             invalidate();
         }
-
         public override Size estimateSize(Size szAvailable)
         {
             if (mXYFixed.Height == 0) return new Size(mXYFixed.Width, mManager.getDefaultFont().Height + 8);
@@ -209,7 +218,7 @@ namespace QUI
             {
                 if (mDisabledImage != "")
                 {
-                    if (!drawImage(ref graphics,ref bitmap, mDisabledImage)) mDisabledImage = "";
+                    if (!drawImage(ref graphics, ref bitmap, mDisabledImage)) mDisabledImage = "";
                     else return;
                 }
             }
@@ -217,7 +226,7 @@ namespace QUI
             {
                 if (mPushedImage != "")
                 {
-                    if (!drawImage(ref graphics,ref bitmap, mPushedImage)) mPushedImage = "";
+                    if (!drawImage(ref graphics, ref bitmap, mPushedImage)) mPushedImage = "";
                     else return;
                 }
             }
@@ -225,7 +234,7 @@ namespace QUI
             {
                 if (mHotImage != "")
                 {
-                    if (!drawImage(ref graphics,ref bitmap, mHotImage)) mHotImage = "";
+                    if (!drawImage(ref graphics, ref bitmap, mHotImage)) mHotImage = "";
                     else return;
                 }
             }
@@ -233,14 +242,14 @@ namespace QUI
             {
                 if (mFocusedImage != "")
                 {
-                    if (!drawImage(ref graphics,ref bitmap, mFocusedImage)) mFocusedImage = "";
+                    if (!drawImage(ref graphics, ref bitmap, mFocusedImage)) mFocusedImage = "";
                     else return;
                 }
             }
 
             if (mNormalImage != "")
             {
-                if (!drawImage(ref graphics,ref bitmap, mNormalImage)) mNormalImage = "";
+                if (!drawImage(ref graphics, ref bitmap, mNormalImage)) mNormalImage = "";
                 else return;
             }
         }

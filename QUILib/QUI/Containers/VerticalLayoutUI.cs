@@ -148,8 +148,8 @@ namespace QUI
                 if (sz.Width > pControl.getMaxWidth()) sz.Width = pControl.getMaxWidth();
                 Rectangle rcCtrl = new Rectangle(iPosX + rcPadding.Left,
                    iPosY + rcPadding.Top,
-                   iPosX + rcPadding.Left + sz.Width - (iPosX + rcPadding.Left),
-                   iPosY + sz.Height + rcPadding.Top + rcPadding.Bottom - (iPosY + rcPadding.Top));
+                   sz.Width,
+                   sz.Height + rcPadding.Bottom);
 
                 pControl.setPos(rcCtrl);
 

@@ -54,6 +54,16 @@ namespace QUI
                 }
                 return;
             }
+            if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_DBLCLICK)
+            {
+                if (isEnabled())
+                {
+                    mManager.sendNotify(this, "itemdbclick");
+                    select();
+                    invalidate();
+                }
+                return;
+            }
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_MOUSEMOVE)
             {
                 return;

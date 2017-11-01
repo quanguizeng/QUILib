@@ -35,7 +35,7 @@ namespace QUI
             mHorizontalScrollbar = null;
             mScrollProcess = false;
 
-            mItems =new ObservableCollectionThreadSafe<ControlUI>();
+            mItems = new ObservableCollectionThreadSafe<ControlUI>();
 
             mDelayedDestroy = true;
         }
@@ -122,8 +122,8 @@ namespace QUI
             {
                 mManager.initControls(control, this);
             }
-            needUpdate();
             mItems.Add(control);
+            needUpdate();
 
             return true;
         }
@@ -249,7 +249,7 @@ namespace QUI
                             }
                     }
                 }
-                else if (newEvent.mKey == (int)EVENTTYPE_UI.UIEVENT_SCROLLWHEEL)
+                else if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SCROLLWHEEL)
                 {
                     switch ((ScrollBarCommands)LOWORD((int)newEvent.mWParam))
                     {
@@ -496,17 +496,14 @@ namespace QUI
         }
         public override void doPaint(ref Graphics graphics, ref Bitmap bitmap, Rectangle rectPaint)
         {
-            Rectangle rcTemp;
-            if (rectPaint.IntersectsWith(mRectItem) == false)
+            Rectangle rcTemp = rectPaint;
+            rcTemp.Intersect(mRectItem);
+            if (rcTemp.IsEmpty == true)
             {
                 return;
             }
-            rcTemp = rectPaint;
-            rcTemp.Intersect(mRectItem);
-
-            Region oldRgn = graphics.Clip;
-            RenderClip clip = new RenderClip();
-            RenderClip.generateClip(ref graphics, rcTemp, ref clip);
+            Region oldRgn = graphics.Clip.Clone();
+            graphics.IntersectClip(rcTemp);
 
             base.doPaint(ref graphics, ref bitmap, rectPaint);
 
@@ -526,15 +523,17 @@ namespace QUI
                 // 绘制滚动条
                 if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
                 {
-                    rc.Width = rc.Right - mVerticalScrollbar.getFixedWidth() - rc.Left;
+                    rc.Width -= mVerticalScrollbar.getFixedWidth();
                 }
                 if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
                 {
-                    rc.Height = rc.Bottom - mHorizontalScrollbar.getFixedHeight() - rc.Top;
+                    rc.Height -= mHorizontalScrollbar.getFixedHeight();
                 }
 
                 // 绘制子控件
-                if (rectPaint.IntersectsWith(rc) == false)
+                rcTemp = rectPaint;
+                rcTemp.Intersect(rc);
+                if (rcTemp.IsEmpty == true)
                 {
                     foreach (var item in mItems)
                     {
@@ -558,10 +557,10 @@ namespace QUI
                 }
                 else
                 {
-                    RenderClip childClip = new RenderClip();
-                    RenderClip.generateClip(ref graphics, rcTemp, ref childClip);
+                    Region oldRgn1 = graphics.Clip.Clone();
+                    graphics.IntersectClip(rcTemp);
 
-                    for (int i = 0; i < mItems.Count;i++ )
+                    for (int i = 0; i < mItems.Count; i++)
                     {
                         ControlUI item = mItems[i];
                         if (item.isVisible() == false)
@@ -578,9 +577,10 @@ namespace QUI
                             {
                                 continue;
                             }
-                            RenderClip.useOldClipBegin(ref graphics, ref childClip);
+                            Region oldRgn2 = graphics.Clip;
+                            graphics.Clip = oldRgn1;
                             item.doPaint(ref graphics, ref bitmap, rectPaint);
-                            RenderClip.useOldClipEnd(ref graphics, ref childClip);
+                            graphics.Clip = oldRgn2;
                         }
                         else
                         {
@@ -591,6 +591,7 @@ namespace QUI
                             item.doPaint(ref graphics, ref bitmap, rectPaint);
                         }
                     }
+                    graphics.Clip = oldRgn1;
                 }
             }
 
@@ -626,7 +627,7 @@ namespace QUI
                 int right = int.Parse(listValue[2]);
                 int top = int.Parse(listValue[1]);
                 int bottom = int.Parse(listValue[3]);
-                setInset(new Rectangle(left, top, right - left, bottom-top));
+                setInset(new Rectangle(left, top, right - left, bottom - top));
             }
             else if (name == "mousechild") setMouseChildEnabled(value == "true");
             else if (name == "vscrollbar")
@@ -724,7 +725,6 @@ namespace QUI
             }
             if ((flags & ControlFlag.UIFIND_TOP_FIRST) != 0)
             {
-
                 for (int i = mItems.Count - 1; i >= 0; i--)
                 {
                     pResult = mItems[i].findControl(proc, ref data, flags);
@@ -830,7 +830,6 @@ namespace QUI
             Size sz = getScrollPos();
             sz.Height -= cyLine;
             setScrollPos(sz);
-
         }
         public virtual void lineDown()
         {
@@ -848,7 +847,6 @@ namespace QUI
             if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible()) iOffset -= mHorizontalScrollbar.getFixedHeight();
             sz.Height -= iOffset;
             setScrollPos(sz);
-
         }
         public virtual void pageDown()
         {

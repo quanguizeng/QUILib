@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace QUI
 {
@@ -134,7 +135,7 @@ namespace QUI
         }
         public MarkupNode getSibling()
         {
-            if(mParentNode == null)
+            if (mParentNode == null)
             {
                 return null;
             }
@@ -241,12 +242,12 @@ namespace QUI
         {
             return mRootNode;
         }
-        public bool loadFromString(ref string strXML)
+        public bool loadFromString(string strXML)
         {
             int xmlLen = strXML.Length;
             char[] buffer = new char[xmlLen + sizeof(char)];
             int i = 0;
-            foreach(var ch in strXML)
+            foreach (var ch in strXML)
             {
                 buffer[i] = ch;
                 i++;
@@ -259,23 +260,67 @@ namespace QUI
 
             return true;
         }
-        public bool loadFromFile(string fileName)
+        public bool loadFromFile(string fileName, PaintManagerUI manager = null)
         {
-            FileStream fileXML = new FileStream(fileName, FileMode.Open);
-            StreamReader readerXML = new StreamReader(fileXML);
-            int fileSize = (int)fileXML.Length;
-            char[] buffer = new char[fileSize + sizeof(char)];
+            if (manager != null && manager.hasPackageCache())
+            {
+                MemoryStream cache = manager.getFileFromPackage(fileName);
 
-            readerXML.Read(buffer, 0, fileSize);
-            buffer[fileSize] = (char)0;
+                if (cache == null)
+                {
+                    throw new Exception("");
+                }
 
-            readerXML.Close();
-            readerXML = null;
-            fileXML = null;
+                {
+                    StreamReader readerXML = new StreamReader(cache);
+                    int fileSize = (int)cache.Length;
+                    char[] buffer = new char[fileSize + sizeof(char)];
 
-            parse(ref buffer, fileSize, ref mRootNode);
+                    readerXML.Read(buffer, 0, fileSize);
+                    buffer[fileSize] = (char)0;
 
-            buffer = null;
+                    readerXML.Close();
+                    readerXML = null;
+
+                    parse(ref buffer, fileSize, ref mRootNode);
+
+                    buffer = null;
+                }
+
+                cache.Close();
+                cache.Dispose();
+                cache = null;
+
+                return true;
+            }
+            else if (manager != null && manager.getWorkingDir() != "")
+            {
+                fileName = manager.getWorkingDir() + fileName;
+            }
+
+            if (File.Exists(fileName) == false)
+            {
+                throw new Exception("");
+            }
+
+            {
+                FileStream fileXML = new FileStream(fileName, FileMode.Open);
+                StreamReader sr = new StreamReader(fileXML);
+                int fileSize = (int)fileXML.Length;
+                char[] buffer = new char[fileSize + sizeof(char)];
+
+                sr.Read(buffer, 0, fileSize);
+                buffer[fileSize] = (char)0;
+
+                sr.Close();
+                sr.Dispose();
+                sr = null;
+                fileXML = null;
+
+                parse(ref buffer, fileSize, ref mRootNode);
+
+                buffer = null;
+            }
 
             return true;
         }
@@ -397,15 +442,15 @@ namespace QUI
 
                     {
                         // 解析节点属性值
-                        bool result = parseAttributes(ref buffer,ref curIdx, ref curNode);
-                        if(result == false)
+                        bool result = parseAttributes(ref buffer, ref curIdx, ref curNode);
+                        if (result == false)
                         {
                             return false;
                         }
 
                         // 解析节点结束标签
                         curIdx = skipWhiteSpace(ref buffer, curIdx);
-                        if(buffer[curIdx] == '/' && buffer[curIdx+1] == '>')
+                        if (buffer[curIdx] == '/' && buffer[curIdx + 1] == '>')
                         {
                             curIdx += 2;
                             stackNode.Pop();
@@ -422,7 +467,7 @@ namespace QUI
                                 curIdx++;
                                 string value = "";
                                 bool parseResult = parseData(ref buffer, ref curIdx, '<', out value);
-                                if(parseResult == false)
+                                if (parseResult == false)
                                 {
                                     return false;
                                 }
@@ -433,7 +478,7 @@ namespace QUI
                                 curNode.setValue(value);
                             }
                             {
-                                if(buffer[curIdx] == (char)0)
+                                if (buffer[curIdx] == (char)0)
                                 {
                                     return true;
                                 }
@@ -548,39 +593,39 @@ namespace QUI
             return result;
         }
 
-        public bool parseAttributes(ref char[] buffer,ref int idx, ref MarkupNode curNode)
+        public bool parseAttributes(ref char[] buffer, ref int idx, ref MarkupNode curNode)
         {
             int start = idx;
 
-            if(buffer[start] == '>')
+            if (buffer[start] == '>')
             {
                 return true;
             }
 
             start++;
             start = skipWhiteSpace(ref buffer, start);
-            while(buffer[start] != (char)0 && buffer[start] != '>' && buffer[start] != '/')
+            while (buffer[start] != (char)0 && buffer[start] != '>' && buffer[start] != '/')
             {
                 string attrName = "";
                 start = parseIdentifier(ref buffer, start, out attrName);
                 start = skipWhiteSpace(ref buffer, start);
-                if(buffer[start] != '=')
+                if (buffer[start] != '=')
                 {
                     throw new Exception("解析属性错误");
                 }
                 start++;
                 start = skipWhiteSpace(ref buffer, start);
-                if(buffer[start] != '"')
+                if (buffer[start] != '"')
                 {
                     throw new Exception("解析属性错误");
                 }
                 start++;
                 string value = "";
-                if(parseData(ref buffer, ref start, '"', out value) == false)
+                if (parseData(ref buffer, ref start, '"', out value) == false)
                 {
                     throw new Exception("解析属性错误");
                 }
-                if(buffer[start] == (char)0)
+                if (buffer[start] == (char)0)
                 {
                     throw new Exception("解析属性错误");
                 }
@@ -604,16 +649,15 @@ namespace QUI
 
             while (buffer[start] != (char)0 && buffer[start] != endFlag)
             {
-                while(buffer[start] == '&')
+                while (buffer[start] == '&')
                 {
                     start++;
                     start = parseMetaChar(ref buffer, start, ref value);
                 }
-                if(buffer[start] == ' ')
+                if (buffer[start] == ' ')
                 {
                     value += buffer[start];
                     start++;
-                    start = skipWhiteSpace(ref buffer, start);
                 }
                 else if (buffer[start] != endFlag)
                 {
@@ -630,8 +674,8 @@ namespace QUI
         public int parseMetaChar(ref char[] buffer, int idx, ref string value)
         {
             int start = idx;
-            
-            if(buffer[idx] == 'a' && buffer[idx+1] == 'm' && buffer[idx+2] == 'p' && buffer[idx+3] == ';')
+
+            if (buffer[idx] == 'a' && buffer[idx + 1] == 'm' && buffer[idx + 2] == 'p' && buffer[idx + 3] == ';')
             {
                 value += '&';
                 start += 4;
@@ -665,7 +709,7 @@ namespace QUI
         }
         public bool isWhiteSpace(string value)
         {
-            if(value.Trim() == "")
+            if (value.Trim() == "")
             {
                 return true;
             }

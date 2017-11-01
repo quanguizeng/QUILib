@@ -72,7 +72,7 @@ namespace QUI
         {
             mIndex = iIndex;
         }
-        public override  void invalidate()
+        public override void invalidate()
         {
             if (!isVisible()) return;
 
@@ -153,6 +153,12 @@ namespace QUI
             if (bSelect == mSelected) return true;
             mSelected = bSelect;
             if (bSelect && mOwner != null) mOwner.selectItem(mIndex);
+
+            if (bSelect == false)
+            {
+                mButtonState &= ~(int)PaintFlags.UISTATE_HOT;
+            }
+
             invalidate();
 
             return true;
@@ -161,7 +167,7 @@ namespace QUI
         {
             return false;
         }
-       public  virtual bool expand(bool bExpand = true)
+        public virtual bool expand(bool bExpand = true)
         {
             return false;
         }

@@ -23,6 +23,7 @@ namespace QUI
         public static bool alphaBitBlt(ref Bitmap hDC, int nDestX, int nDestY, int dwWidth, int dwHeight,
         ref Bitmap hSrcDC, int nSrcX, int nSrcY, int wSrc, int hSrc, int SourceConstantAlpha)
         {
+            return true;
             Bitmap dstBitmap = new Bitmap(dwWidth - nDestX, dwHeight - nDestY, PixelFormat.Format32bppArgb);
 
             if (dstBitmap == null)
@@ -614,14 +615,14 @@ namespace QUI
         }
         public static void drawRect(ref Graphics graphics, ref Rectangle rc, int size, int penColor)
         {
-            Pen pen = new Pen(Color.FromArgb(penColor),size);
+            Pen pen = new Pen(Color.FromArgb(penColor), size);
             if (size > 1)
             {
                 Rectangle rc0 = rc;
-                int newLeft = rc0.X+size-1;
-                int newTop =rc0.Y+size-1;
-                int newRight = rc0.Right+1;
-                int newBottom = rc0.Bottom+1;
+                int newLeft = rc0.X + size - 1;
+                int newTop = rc0.Y + size - 1;
+                int newRight = rc0.Right + 1;
+                int newBottom = rc0.Bottom + 1;
                 rc0.X = newLeft;
                 rc0.Y = newTop;
                 rc0.Width = newRight - newLeft;
@@ -645,35 +646,20 @@ namespace QUI
         {
             Font font = manager.getFont(iFont);
             Brush brush = new SolidBrush(Color.FromArgb(textColor));
+            StringFormat stringFormat = new StringFormat();
 
-            Size sz = EnginHelper.measureString(ref graphics, strText, font);
-            Rectangle rc1 = rc;
-            rc1.Width = sz.Width + 10;
-            rc1.Height = sz.Height;
-            //graphics.DrawRectangle(new Pen(Color.Yellow), rc);
             {
                 Rectangle newRect = rc;
                 Size rcText = EnginHelper.measureString(ref graphics, strText, font);
 
                 if ((style & (int)FormatFlags.DT_CENTER) != 0)
                 {
-                    if (newRect.Width > rcText.Width + 3)
-                    {
-                        int newLeft = newRect.Left + (newRect.Width - rcText.Width) / 2;
-                        int newRight = newRect.Right;
-                        newRect.X = newLeft;
-                        newRect.Width = newRight-newLeft;
-                    }
+                    stringFormat.LineAlignment = StringAlignment.Center;
+                    stringFormat.Alignment = StringAlignment.Center;
                 }
                 if ((style & (int)FormatFlags.DT_VCENTER) != 0)
                 {
-                    if (newRect.Height > rcText.Height + 3)
-                    {
-                        int newTop = newRect.Top + (newRect.Height - rcText.Height) / 2;
-                        int newBottom = newTop + rcText.Height;
-                        newRect.Y = newTop;
-                        newRect.Height = rcText.Height;
-                    }
+                    stringFormat.LineAlignment = StringAlignment.Center;
                 }
 
                 if ((style & (int)FormatFlags.DT_TOP) != 0)
@@ -681,17 +667,31 @@ namespace QUI
                 }
                 if ((style & (int)FormatFlags.DT_BOTTOM) != 0)
                 {
-                    if (newRect.Height > rcText.Height + 3)
-                    {
-                        int newTop = newRect.Bottom - rcText.Height;
-                        int newBottom = newRect.Bottom;
-                        newRect.Y = newTop;
-                        newRect.Height = rcText.Height;
-                    }
                 }
+                Region or = graphics.Clip;
+                Region r = null;
+                if (rcText.Width > newRect.Width && (style & (int)FormatFlags.DT_SINGLELINE) != 0)
+                {
+                    r = new Region(rc);
+                    r.Intersect(or);
+                    graphics.Clip = r;
 
-                graphics.DrawString(strText, font, brush, newRect);
+                    int c = strText.Length;
+                    int n = (int)Math.Round(newRect.Width * 1.0 / (rcText.Width / c));
+                    newRect.Width = rcText.Width;
+                    n = n > c ? c : n;
+                    strText = strText.Substring(0, n);
+                }
+                graphics.DrawString(strText, font, brush, newRect, stringFormat);
+                graphics.Clip = or;
+                if (r != null)
+                {
+                    r.Dispose();
+                    r = null;
+                }
             }
+            stringFormat.Dispose();
+            stringFormat = null;
             brush.Dispose();
             brush = null;
         }

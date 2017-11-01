@@ -24,7 +24,10 @@ namespace QUI
             mHotImage = "";
             mFocusedImage = "";
             mDisabledImage = "";
+            //mTextStyle = (int)FormatFlags.DT_VCENTER | (int)FormatFlags.DT_SINGLELINE;
+            mPrecision = 0;
 
+            setTextType();
         }
         ~EditUI()
         {
@@ -72,7 +75,11 @@ namespace QUI
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SCROLLWHEEL)
             {
                 ControlUI ctlUI = null;
-                if (mWindow != null) mManager.setFocus(ref ctlUI);
+                if (mWindow != null)
+                {
+                    closeEditWnd();
+                    mManager.setFocus(ref ctlUI);
+                }
             }
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_SETFOCUS && isEnabled())
             {
@@ -80,6 +87,10 @@ namespace QUI
 
                 mWindow = new EditWnd();
                 mWindow.init(this);
+                if (OnCharMessageEvent != null)
+                {
+                    mWindow.OnCharMessageEvent = OnCharMessageEvent;
+                }
                 invalidate();
             }
             if (newEvent.mType == (int)EVENTTYPE_UI.UIEVENT_KILLFOCUS && isEnabled())
@@ -94,13 +105,10 @@ namespace QUI
                     {
                         mWindow = new EditWnd();
                         mWindow.init(this);
-                    }
-                    else if (mWindow == null)
-                    {
-                        //POINT pt = event.ptMouse;
-                        //pt.x -= m_rcItem.left + m_rcTextPadding.left;
-                        //pt.y -= m_rcItem.top + m_rcTextPadding.top;
-                        //::SendMessage(*m_pWindow, WM_LBUTTONDOWN, event.wParam, MAKELPARAM(pt.x, pt.y));
+                        if (OnCharMessageEvent != null)
+                        {
+                            mWindow.OnCharMessageEvent = OnCharMessageEvent;
+                        }
                     }
                 }
                 return;
@@ -141,14 +149,39 @@ namespace QUI
                 mButtonState = 0;
             }
         }
-        public override void setText(string text)
+        public override void setText(string text, bool notify = true)
         {
             if (mText == text)
             {
                 return;
             }
-            mText = text;
-            if (mManager != null) mManager.sendNotify(this, "textchanged");
+            if (isTextType())
+            {
+                mText = text;
+            }
+            else if(isFloatType())
+            {
+                double num;
+                if (double.TryParse(text, out num))
+                {
+                    if (num >= getMinValue() && num <= getMaxValue())
+                    {
+                        mText = num.ToString(getFormatString());
+                    }
+                }
+            }
+            else
+            {
+                double num;
+                if (double.TryParse(text, out num))
+                {
+                    if (num >= getMinValue() && num <= getMaxValue())
+                    {
+                        mText = num.ToString("");
+                    }
+                }
+            }
+            if (mManager != null && notify) mManager.sendNotify(this, "textchanged");
             invalidate();
         }
         public void setMaxChar(int max)
@@ -288,6 +321,13 @@ namespace QUI
             {
                 setDisabledImage(value);
             }
+            else if (name == "disabledcolor")
+            {
+                value = value.TrimStart('#');
+                Color color = Color.FromArgb(Convert.ToInt32(value, 16));
+
+                setDisabledColor(color);
+            }
             else
             {
                 base.setAttribute(name, value);
@@ -331,15 +371,23 @@ namespace QUI
                 else return;
             }
 
-            uint dwBorderColor = 0xFF4EA0D1;
-            int nBorderSize = 1;
-            if ((mButtonState & (int)PaintFlags.UISTATE_HOT) != 0 || (mButtonState & (int)PaintFlags.UISTATE_FOCUSED) != 0)
+            uint dwBorderColor = (uint)mBorderColor.ToArgb();
+            int nBorderSize = mBorderSize;
+            //if ((mButtonState & (int)PaintFlags.UISTATE_HOT) != 0 || (mButtonState & (int)PaintFlags.UISTATE_FOCUSED) != 0)
             {
                 dwBorderColor = 0xFF85E4FF;
-                nBorderSize = 2;
             }
-
-            RenderEngine.drawRect(ref graphics, ref bitmap, ref mRectItem, nBorderSize, (int)dwBorderColor);
+            if (mBorderSize != 0)
+            {
+                if (mBorderColor.A != 0)
+                {
+                    RenderEngine.drawRect(ref graphics, ref bitmap, ref mRectItem, mBorderSize, (int)mBorderColor.ToArgb());
+                }
+                else
+                {
+                    RenderEngine.drawRect(ref graphics, ref bitmap, ref mRectItem, mBorderSize, (int)dwBorderColor);
+                }
+            }
         }
         public override void paintText(ref Graphics graphics, ref Bitmap bitmap)
         {
@@ -367,11 +415,11 @@ namespace QUI
 
             if (isEnabled())
             {
-                RenderEngine.drawText(ref graphics, ref bitmap, ref mManager,ref rc, sText, mTextColor.ToArgb(), mFont, (int)FormatFlags.DT_SINGLELINE | mTextStyle);
+                RenderEngine.drawText(ref graphics, ref bitmap, ref mManager, ref rc, sText, mTextColor.ToArgb(), mFont, mTextStyle);
             }
             else
             {
-                RenderEngine.drawText(ref graphics, ref bitmap, ref mManager, ref rc, sText, mDisabledTextColor.ToArgb(), mFont, (int)FormatFlags.DT_SINGLELINE | mTextStyle);
+                RenderEngine.drawText(ref graphics, ref bitmap, ref mManager, ref rc, sText, mDisabledTextColor.ToArgb(), mFont, mTextStyle);
             }
         }
         public bool setEditWnd(EditWnd wnd)
@@ -380,7 +428,100 @@ namespace QUI
 
             return true;
         }
+        public override void setPos(Rectangle rc)
+        {
+            base.setPos(rc);
+        }
+        public void closeEditWnd()
+        {
+            if (mWindow == null)
+            {
+                return;
+            }
+            object obj = null;
+            bool result = false;
+            mWindow.onKillFocus(0, ref obj, ref obj, ref result);
+        }
+        public void paintDisabledColor(ref Graphics graphics, ref Bitmap bitmap)
+        {
+            if (mDisabledColor != null && mDisabledColor.ToArgb() != 0 && isEnabled() == false)
+            {
+                RenderEngine.drawColor(ref graphics, ref bitmap, ref mRectPaint, mDisabledColor.ToArgb());
+            }
+        }
+        public void setDisabledColor(Color color)
+        {
+            mDisabledColor = color;
+        }
+        public override void doPaint(ref Graphics graphics, ref Bitmap bitmap, Rectangle rectPaint)
+        {
+            base.doPaint(ref graphics, ref bitmap, rectPaint);
+            paintDisabledColor(ref graphics, ref bitmap);
+        }
+        public void setIntType(int min = int.MinValue, int max = int.MaxValue)
+        {
+            mTextBoxType = TextBoxType.Int;
+            mMinValue = min < max ? min : max;
+            mMaxValue = max > min ? max : min;
 
+            setText(mText == "" ? "0" : mText);
+        }
+        public void setFloatType(double min = double.MinValue, double max = double.MaxValue, int precision = 6)
+        {
+            mTextBoxType = TextBoxType.Float;
+            mMinValue = min < max ? min : max;
+            mMaxValue = max > min ? max : min;
+            mPrecision = precision;
+
+            setText(mText == "" ? "0" : mText);
+        }
+        public void setTextType()
+        {
+            mTextBoxType = TextBoxType.Text;
+        }
+        public bool isIntType()
+        {
+            return mTextBoxType == TextBoxType.Int;
+        }
+        public bool isFloatType()
+        {
+            return mTextBoxType == TextBoxType.Float;
+        }
+        public bool isTextType()
+        {
+            return mTextBoxType == TextBoxType.Text;
+        }
+        public double getMinValue()
+        {
+            return mMinValue;
+        }
+        public double getMaxValue()
+        {
+            return mMaxValue;
+        }
+        public string getFormatString()
+        {
+            string str = "0.";
+
+            for (int i = 0; i < mPrecision; i++)
+            {
+                str += "#";
+            }
+
+            return str;
+        }
+        public int getPrecision()
+        {
+            return mPrecision;
+        }
+
+
+        protected enum TextBoxType
+        {
+            Text,
+            Int,
+            Float
+        }
         protected int mMaxChar;
         protected bool mReadOnly;
         protected bool mPasswordMode;
@@ -391,5 +532,12 @@ namespace QUI
         protected string mFocusedImage;
         protected string mDisabledImage;
         protected EditWnd mWindow;
+        protected Color mDisabledColor;
+        public delegate int MessageEvent(object textBox, ref object wParam);
+        public MessageEvent OnCharMessageEvent;
+        protected TextBoxType mTextBoxType;
+        protected double mMinValue;
+        protected double mMaxValue;
+        protected int mPrecision;
     }
 }

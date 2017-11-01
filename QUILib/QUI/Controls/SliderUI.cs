@@ -25,7 +25,6 @@ namespace QUI
             mThumbPushedImage = "";
 
             mImageModify = "";
-
         }
         public override string getClass()
         {
@@ -256,6 +255,10 @@ namespace QUI
                 if (!drawImage(ref hDC, ref bitmap, mThumbImage, mImageModify)) mThumbImage = "";
                 else return;
             }
+        }
+        public bool isTrySetValue()
+        {
+            return (mButtonState & (int)PaintFlags.UISTATE_CAPTURED) != 0;
         }
 
         protected Size mThumb;

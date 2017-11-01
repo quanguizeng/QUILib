@@ -22,7 +22,7 @@ namespace ListDemo2
 
                 mManager.init(ref form);
 
-                DialogBuilder builder = new DialogBuilder();
+                DialogBuilder builder = new DialogBuilder(true);
 
                 mRootNode = builder.createFromFile("skin.xml", null, mManager);
                 mManager.attachDialog(ref mRootNode);
@@ -44,7 +44,6 @@ namespace ListDemo2
 
                 init();
             }
-
         }
         ~Form1()
         {
@@ -226,7 +225,7 @@ namespace ListDemo2
             for (int i = 0; i < 15; i++)
             {
                 ListTextElementUI pListElement = new ListTextElementUI();
-                pList.add(pListElement);
+                pList.addAt(pListElement,i);
             }
         }
         public string getItemText(ControlUI pList, int iItem, int iSubItem)
@@ -247,5 +246,6 @@ namespace ListDemo2
         protected Rectangle mRectClient;
         protected ControlUI mRootNode;
         protected ListUI mUserList;
+
     }
 }

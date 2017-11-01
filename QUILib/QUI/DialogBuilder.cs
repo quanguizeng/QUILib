@@ -19,9 +19,10 @@ namespace QUI
     }
     public class DialogBuilder
     {
-        public DialogBuilder()
+        public DialogBuilder(bool mainWnd = false)
         {
             mXML = new Markup();
+            mIsMainWindow = mainWnd;
         }
         ~DialogBuilder()
         {
@@ -31,11 +32,11 @@ namespace QUI
 
         public ControlUI createFromString(string strXML, IDialogBuilderCallback callback = null, PaintManagerUI manager = null)
         {
-            mCallback = callback;
-            if (mXML.loadFromString(ref strXML) == false)
+            if (mXML.loadFromString(strXML) == false)
             {
                 return null;
             }
+            mCallback = callback;
 
             MarkupNode root = mXML.getRoot();
             ControlUI control = null;
@@ -50,11 +51,11 @@ namespace QUI
         }
         public ControlUI createFromFile(string xmlFile, IDialogBuilderCallback callback = null, PaintManagerUI manager = null)
         {
-            mCallback = callback;
-            if (mXML.loadFromFile(xmlFile) == false)
+            if (mXML.loadFromFile(xmlFile, manager) == false)
             {
                 return null;
             }
+            mCallback = callback;
 
             MarkupNode root = mXML.getRoot();
 
@@ -66,7 +67,6 @@ namespace QUI
             root.release();
 
             return rootNode;
-
         }
         public ControlUI createFromMem(ref char[] buffer, int count, IDialogBuilderCallback callback = null, PaintManagerUI manager = null)
         {
@@ -84,9 +84,7 @@ namespace QUI
             root.release();
 
             return rootNode;
-
         }
-
         protected bool parseWindowAttributes(ref MarkupNode root, ref PaintManagerUI manager)
         {
             if (manager != null)
@@ -177,7 +175,7 @@ namespace QUI
 
                             if (fontName != "")
                             {
-                                Font font = manager.addFont(fontName, size-3, bold, underline, italic);
+                                Font font = manager.addFont(fontName, size - 3, bold, underline, italic);
                                 if (font != null)
                                 {
                                     if (defaultfont)
@@ -219,7 +217,7 @@ namespace QUI
                         }
                     }
 
-                    if (manager.getPaintWindow() != null)
+                    if (manager.getPaintWindow() != null && mIsMainWindow)
                     {
                         List<XMLAttribute> listAttr = root.getAttributeList();
                         foreach (var attr in listAttr)
@@ -229,7 +227,7 @@ namespace QUI
                                 string[] listValue = attr.getValue().Split(',');
                                 if (listValue.Length != 2)
                                 {
-                                    throw new Exception("窗口大小参数值有误");
+                                    throw new Exception("");
                                 }
                                 int cx = int.Parse(listValue[0]);
                                 int cy = int.Parse(listValue[1]);
@@ -240,7 +238,7 @@ namespace QUI
                                 string[] listValue = attr.getValue().Split(',');
                                 if (listValue.Length != 4)
                                 {
-                                    throw new Exception("窗口大小参数值有误");
+                                    throw new Exception("");
                                 }
                                 int left = int.Parse(listValue[0]);
                                 int top = int.Parse(listValue[1]);
@@ -255,7 +253,7 @@ namespace QUI
                                 string[] listValue = attr.getValue().Split(',');
                                 if (listValue.Length != 4)
                                 {
-                                    throw new Exception("标题大小参数值有误");
+                                    throw new Exception("");
                                 }
                                 int left = int.Parse(listValue[0]);
                                 int top = int.Parse(listValue[1]);
@@ -270,7 +268,7 @@ namespace QUI
                                 string[] listValue = attr.getValue().Split(',');
                                 if (listValue.Length < 2)
                                 {
-                                    throw new Exception("窗口边框圆角半径参数值有误");
+                                    throw new Exception("");
                                 }
                                 int cx = int.Parse(listValue[0]);
                                 int cy = int.Parse(listValue[1]);
@@ -281,7 +279,7 @@ namespace QUI
                                 string[] listValue = attr.getValue().Split(',');
                                 if (listValue.Length != 2)
                                 {
-                                    throw new Exception("窗口大小最小值参数值有误");
+                                    throw new Exception("");
                                 }
                                 int cx = int.Parse(listValue[0]);
                                 int cy = int.Parse(listValue[1]);
@@ -368,7 +366,7 @@ namespace QUI
                                     {
                                         if (ctlParent != null)
                                         {
-                                            throw new Exception("不能有两个根容器");
+                                            throw new Exception("");
                                         }
                                         ctlParent = newControl;
                                     }
@@ -378,7 +376,7 @@ namespace QUI
                                     newControl = mCallback.createControl(node.getName(), manager);
                                     if (newControl == null)
                                     {
-                                        throw new Exception("未知控件类型");
+                                        throw new Exception("");
                                     }
                                     queueControl.Enqueue(newControl);
 
@@ -392,14 +390,14 @@ namespace QUI
                                     {
                                         if (ctlParent != null)
                                         {
-                                            throw new Exception("不能有两个根容器");
+                                            throw new Exception("");
                                         }
                                         ctlParent = newControl;
                                     }
                                 }
                                 else
                                 {
-                                    throw new Exception("未知控件类型");
+                                    throw new Exception("");
                                 }
                             }
 
@@ -538,6 +536,15 @@ namespace QUI
                         }
                         break;
                     }
+                case 13:
+                    {
+                        if (typeName == "NumericUpDown")
+                        {
+                            newControl = new NumericUpDownUI();
+                        }
+                        break;
+
+                    }
                 case 14:
                     {
                         if (typeName == "VerticalLayout")
@@ -588,7 +595,6 @@ namespace QUI
                         }
                         break;
                     }
-
             }
 
             return newControl;
@@ -596,5 +602,6 @@ namespace QUI
 
         protected Markup mXML;
         protected IDialogBuilderCallback mCallback;
+        private bool mIsMainWindow;
     }
 }

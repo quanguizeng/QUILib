@@ -169,7 +169,7 @@ namespace QUI
                 if (sz.Height < pControl.getMinHeight()) sz.Height = pControl.getMinHeight();
                 if (sz.Height > pControl.getMaxHeight()) sz.Height = pControl.getMaxHeight();
 
-                Rectangle rcCtrl = new Rectangle(rc.Left, rc.Top, rc.Left + sz.Width, rc.Top + sz.Height);
+                Rectangle rcCtrl = new Rectangle(rc.Left, rc.Top, sz.Width, sz.Height);
                 pControl.setPos(rcCtrl);
             }
         }
