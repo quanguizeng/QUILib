@@ -23,7 +23,6 @@ namespace QUI
         public static bool alphaBitBlt(ref Bitmap hDC, int nDestX, int nDestY, int dwWidth, int dwHeight,
         ref Bitmap hSrcDC, int nSrcX, int nSrcY, int wSrc, int hSrc, int SourceConstantAlpha)
         {
-            return true;
             Bitmap dstBitmap = new Bitmap(dwWidth - nDestX, dwHeight - nDestY, PixelFormat.Format32bppArgb);
 
             if (dstBitmap == null)
@@ -414,7 +413,6 @@ namespace QUI
                     }
                 }
             }
-
         }
         public static bool drawImageString(ref Graphics graphics, ref Bitmap hDC, ref PaintManagerUI pManager, ref Rectangle rc, ref Rectangle rcPaint,
                               string pStrImage, string pStrModify)
@@ -646,7 +644,6 @@ namespace QUI
         {
             Font font = manager.getFont(iFont);
             Brush brush = new SolidBrush(Color.FromArgb(textColor));
-            StringFormat stringFormat = new StringFormat();
 
             {
                 Rectangle newRect = rc;
@@ -654,19 +651,20 @@ namespace QUI
 
                 if ((style & (int)FormatFlags.DT_CENTER) != 0)
                 {
-                    stringFormat.LineAlignment = StringAlignment.Center;
-                    stringFormat.Alignment = StringAlignment.Center;
+                    newRect.X = newRect.X + (newRect.Width - rcText.Width) / 2;
                 }
                 if ((style & (int)FormatFlags.DT_VCENTER) != 0)
                 {
-                    stringFormat.LineAlignment = StringAlignment.Center;
+                    newRect.Y = newRect.Y + (newRect.Height - rcText.Height) / 2;
                 }
 
                 if ((style & (int)FormatFlags.DT_TOP) != 0)
                 {
+                    newRect.Y = newRect.Y;
                 }
                 if ((style & (int)FormatFlags.DT_BOTTOM) != 0)
                 {
+                    newRect.Y = newRect.Y + newRect.Height - rcText.Height;
                 }
                 Region or = graphics.Clip;
                 Region r = null;
@@ -682,7 +680,7 @@ namespace QUI
                     n = n > c ? c : n;
                     strText = strText.Substring(0, n);
                 }
-                graphics.DrawString(strText, font, brush, newRect, stringFormat);
+                graphics.DrawString(strText, font, brush, newRect);
                 graphics.Clip = or;
                 if (r != null)
                 {
@@ -690,8 +688,6 @@ namespace QUI
                     r = null;
                 }
             }
-            stringFormat.Dispose();
-            stringFormat = null;
             brush.Dispose();
             brush = null;
         }
@@ -1178,7 +1174,6 @@ namespace QUI
 
                                 break;
                             }
-
                     }
                     while (idx < pstrText.Length && pstrText[idx] != '\0' && pstrText[idx] != '>' && pstrText[idx] != '}')
                     {

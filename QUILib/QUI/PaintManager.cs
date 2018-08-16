@@ -10,7 +10,6 @@ using System.Drawing.Imaging;
 using System.Collections;
 using System.Drawing.Drawing2D;
 using ICSharpCode.SharpZipLib.Zip;
-using Utility;
 
 namespace QUI
 {
@@ -60,8 +59,6 @@ namespace QUI
             mWorkingDir = "";
 
             mZIPPackageCache = null;
-            mNGPackageCache = null;
-            mFileItems = null;
         }
         ~PaintManagerUI()
         {
@@ -78,13 +75,6 @@ namespace QUI
 
             mWorkingDir = "";
 
-            if (mFileItems != null)
-            {
-                mFileItems.Clear();
-                mFileItems = null;
-            }
-
-            mNGPackageCache = null;
             mZIPPackageCache = null;
 
             removeAllDefaultAttributeList();
@@ -460,10 +450,6 @@ namespace QUI
             {
                 return getFileFromZip(ref mZIPPackageCache, fileName);
             }
-            else if (mNGPackageCache != null)
-            {
-                return PackFilesHelper.getFileFromPackStream(ref mNGPackageCache, ref mFileItems, fileName);
-            }
 
             // 触发崩溃
             return null;
@@ -475,10 +461,6 @@ namespace QUI
 
             while ((fileItem = zipStream.GetNextEntry()) != null)
             {
-                if (fileItem.Name.Contains("FlightState.xml"))
-                {
-                    int sss = 0;
-                }
                 if (fileName == fileItem.Name)
                 {
                     cache = new MemoryStream();
@@ -1876,14 +1858,9 @@ namespace QUI
             mZIPPackageCache = cache;
             mZIPFileStream = fileStream;
         }
-        public void setNGPackageCache(ref MemoryStream cache)
-        {
-            mNGPackageCache = cache;
-            mFileItems = PackFilesHelper.parseFileItems(ref cache);
-        }
         public bool hasPackageCache()
         {
-            return mZIPPackageCache != null || mNGPackageCache != null;
+            return mZIPPackageCache != null;
         }
 
 
@@ -1946,8 +1923,5 @@ namespace QUI
 
         private ZipInputStream mZIPPackageCache;
         private FileStream mZIPFileStream;
-        private MemoryStream mNGPackageCache;
-
-        private List<PackFileItem> mFileItems;
     }
 }

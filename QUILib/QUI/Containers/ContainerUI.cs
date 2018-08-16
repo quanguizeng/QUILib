@@ -35,9 +35,10 @@ namespace QUI
             mHorizontalScrollbar = null;
             mScrollProcess = false;
 
-            mItems = new ObservableCollectionThreadSafe<ControlUI>();
+            mItems = new List<ControlUI>();
 
             mDelayedDestroy = true;
+            lockObj = new Object();
         }
         ~ContainerUI()
         {
@@ -73,106 +74,131 @@ namespace QUI
         }
         public virtual ControlUI getItemAt(int idx)
         {
-            if (idx < 0 || idx >= mItems.Count)
+            lock (lockObj)
             {
-                return null;
+                if (idx < 0 || idx >= mItems.Count)
+                {
+                    return null;
+                }
+                return (ControlUI)mItems[idx];
             }
-            return (ControlUI)mItems[idx];
         }
         public virtual int getItemIndex(ControlUI control)
         {
-            for (int i = 0; i < mItems.Count; i++)
+            lock (lockObj)
             {
-                if ((ContainerUI)mItems[i] == control)
+                for (int i = 0; i < mItems.Count; i++)
                 {
-                    return i;
+                    if ((ContainerUI)mItems[i] == control)
+                    {
+                        return i;
+                    }
                 }
-            }
 
-            return -1;
+                return -1;
+            }
         }
         public virtual bool setItemIndex(ControlUI control, int idx)
         {
-            for (int i = 0; i < mItems.Count; i++)
+            lock (lockObj)
             {
-                if ((ControlUI)mItems[i] == control)
+                for (int i = 0; i < mItems.Count; i++)
                 {
-                    mItems.Remove(mItems[i]);
-                    mItems.Insert(idx, control);
+                    if ((ControlUI)mItems[i] == control)
+                    {
+                        mItems.Remove(mItems[i]);
+                        mItems.Insert(idx, control);
 
-                    return true;
+                        return true;
+                    }
                 }
-            }
 
-            return false;
+                return false;
+            }
         }
         public virtual int getCount()
         {
-            return mItems.Count;
-
+            lock (lockObj)
+            {
+                return mItems.Count;
+            }
         }
         public virtual bool add(ControlUI control)
         {
-            if (control == null)
+            lock (lockObj)
             {
-                return false;
-            }
+                if (control == null)
+                {
+                    return false;
+                }
 
-            if (mManager != null)
-            {
-                mManager.initControls(control, this);
-            }
-            mItems.Add(control);
-            needUpdate();
+                if (mManager != null)
+                {
+                    mManager.initControls(control, this);
+                }
+                mItems.Add(control);
+                needUpdate();
 
-            return true;
+                return true;
+            }
         }
         public virtual bool addAt(ControlUI control, int idx)
         {
-            if (control == null || idx < 0 || idx > mItems.Count)
+            lock (lockObj)
             {
-                return false;
+                if (control == null || idx < 0 || idx > mItems.Count)
+                {
+                    return false;
+                }
+
+                if (mManager != null)
+                {
+                    mManager.initControls(control, this);
+                }
+                needUpdate();
+
+                mItems.Insert(idx, control);
+
+                return true;
             }
-
-            if (mManager != null)
-            {
-                mManager.initControls(control, this);
-            }
-            needUpdate();
-
-            mItems.Insert(idx, control);
-
-            return true;
         }
         public virtual bool remove(ControlUI control)
         {
-
-            if (control == null)
+            lock (lockObj)
             {
-                return false;
-            }
+                if (control == null)
+                {
+                    return false;
+                }
 
-            return mItems.Remove(control);
+                return mItems.Remove(control);
+            }
         }
         public virtual bool removeAt(int idx)
         {
-            if (idx < 0 || idx >= mItems.Count)
+            lock (lockObj)
             {
-                return false;
-            }
+                if (idx < 0 || idx >= mItems.Count)
+                {
+                    return false;
+                }
 
-            return mItems.Remove(mItems[idx]);
+                return mItems.Remove(mItems[idx]);
+            }
         }
         public virtual void removeAll()
         {
-            // 需要遍历子树，释放子节点内存
-            for (int it = 0; mAutoDestroy && it < mItems.Count; it++)
+            lock (lockObj)
             {
-                if (mDelayedDestroy && mManager != null) mManager.addDelayedCleanup(mItems[it]);
-                else mItems[it] = null;
+                // 需要遍历子树，释放子节点内存
+                for (int it = 0; mAutoDestroy && it < mItems.Count; it++)
+                {
+                    if (mDelayedDestroy && mManager != null) mManager.addDelayedCleanup(mItems[it]);
+                    else mItems[it] = null;
+                }
+                mItems.Clear();
+                needUpdate();
             }
-            mItems.Clear();
-            needUpdate();
         }
         public override void eventProc(ref TEventUI newEvent)
         {
@@ -312,27 +338,33 @@ namespace QUI
 
         public override void setVisible(bool visible = true)
         {
-            if (visible == mVisible)
+            lock (lockObj)
             {
-                return;
-            }
+                if (visible == mVisible)
+                {
+                    return;
+                }
 
-            foreach (var item in mItems)
-            {
-                item.setInternVisible(visible);
-            }
+                foreach (var item in mItems)
+                {
+                    item.setInternVisible(visible);
+                }
 
-            base.setVisible(visible);
+                base.setVisible(visible);
+            }
         }
 
         public override void setInternVisible(bool visible = true)
         {
-            foreach (var item in mItems)
+            lock (lockObj)
             {
-                item.setInternVisible(visible);
-            }
+                foreach (var item in mItems)
+                {
+                    item.setInternVisible(visible);
+                }
 
-            base.setVisible(visible);
+                base.setVisible(visible);
+            }
         }
 
         public override void setMouseEnabled(bool enable = true)
@@ -384,235 +416,245 @@ namespace QUI
         {
             mMouseChildEnabled = enable;
         }
-
-
         public virtual int findSelectable(int idx, bool forward = true)
         {
-            if (getCount() == 0)
+            lock(lockObj)
             {
-                return -1;
-            }
-            idx = idx > 0 ? idx : 0;
-            idx = idx > getCount() - 1 ? getCount() - 1 : idx;
-            if (forward)
-            {
-                for (int i = idx; i < getCount(); i++)
+                if (getCount() == 0)
                 {
-                    if (getItemAt(i).getInterface("ListItem") != null &&
-                        getItemAt(i).isVisible() &&
-                        getItemAt(i).isEnabled())
-                    {
-                        return i;
-                    }
+                    return -1;
                 }
-                return -1;
-            }
-            else
-            {
-                for (int i = idx; i >= 0; i--)
+                idx = idx > 0 ? idx : 0;
+                idx = idx > getCount() - 1 ? getCount() - 1 : idx;
+                if (forward)
                 {
-                    if (getItemAt(i).getInterface("ListItem") != null &&
-                        getItemAt(i).isVisible() &&
-                        getItemAt(i).isEnabled())
+                    for (int i = idx; i < getCount(); i++)
                     {
-                        return i;
+                        if (getItemAt(i).getInterface("ListItem") != null &&
+                            getItemAt(i).isVisible() &&
+                            getItemAt(i).isEnabled())
+                        {
+                            return i;
+                        }
                     }
+                    return -1;
                 }
+                else
+                {
+                    for (int i = idx; i >= 0; i--)
+                    {
+                        if (getItemAt(i).getInterface("ListItem") != null &&
+                            getItemAt(i).isVisible() &&
+                            getItemAt(i).isEnabled())
+                        {
+                            return i;
+                        }
+                    }
 
-                return findSelectable(0, true);
+                    return findSelectable(0, true);
+                }
             }
         }
         public virtual void setFloatPos(int iIndex)
         {
-            // 因为CControlUI::SetPos对float的操作影响，这里不能对float组件添加滚动条的影响
-            if (iIndex < 0 || iIndex >= mItems.Count) return;
-
-            ControlUI pControl = mItems[iIndex];
-
-            if (!pControl.isVisible()) return;
-            if (!pControl.isFloat()) return;
-
-            Size szXY = pControl.getFixedXY();
-            Size sz = new Size(pControl.getFixedWidth(), pControl.getFixedHeight());
-            Rectangle rcCtrl = new Rectangle();
-            int right = 0;
-            int bottom = 0;
-            if (szXY.Width >= 0)
+            lock (lockObj)
             {
-                rcCtrl.X = mRectItem.Left + szXY.Width;
-                right = mRectItem.Left + szXY.Width + sz.Width;
-            }
-            else
-            {
-                rcCtrl.X = mRectItem.Right + szXY.Width - sz.Width;
-                right = mRectItem.Right + szXY.Width;
-            }
-            if (szXY.Height >= 0)
-            {
-                rcCtrl.Y = mRectItem.Top + szXY.Height;
-                bottom = mRectItem.Top + szXY.Height + sz.Height;
-            }
-            else
-            {
-                rcCtrl.Y = mRectItem.Bottom + szXY.Height - sz.Height;
-                bottom = mRectItem.Bottom + szXY.Height;
-            }
-            rcCtrl = new Rectangle(rcCtrl.X, rcCtrl.Y, right - rcCtrl.X, bottom - rcCtrl.Y);
-            pControl.setPos(rcCtrl);
-        }
-        public override void setPos(Rectangle rect)
-        {
-            base.setPos(rect);
+                // 因为CControlUI::SetPos对float的操作影响，这里不能对float组件添加滚动条的影响
+                if (iIndex < 0 || iIndex >= mItems.Count) return;
 
-            if (mRectItem.IsEmpty)
-            {
-                return;
-            }
-            int newLeft = rect.Left + mRectInset.Left;
-            int newTop = rect.Top + mRectInset.Top;
-            int newRight = rect.Right - mRectInset.Width;
-            int newBottom = rect.Bottom - mRectInset.Height;
+                ControlUI pControl = mItems[iIndex];
 
-            rect.X = newLeft;
-            rect.Width = newRight - newLeft;
-            rect.Y = newTop;
-            rect.Height = newBottom - newTop;
+                if (!pControl.isVisible()) return;
+                if (!pControl.isFloat()) return;
 
-            for (int i = 0; i < mItems.Count; i++)
-            {
-                if (mItems[i].isVisible() == false)
+                Size szXY = pControl.getFixedXY();
+                Size sz = new Size(pControl.getFixedWidth(), pControl.getFixedHeight());
+                Rectangle rcCtrl = new Rectangle();
+                int right = 0;
+                int bottom = 0;
+                if (szXY.Width >= 0)
                 {
-                    continue;
-                }
-                if (mItems[i].isFloat())
-                {
-                    setFloatPos(i);
+                    rcCtrl.X = mRectItem.Left + szXY.Width;
+                    right = mRectItem.Left + szXY.Width + sz.Width;
                 }
                 else
                 {
-                    mItems[i].setPos(rect);
+                    rcCtrl.X = mRectItem.Right + szXY.Width - sz.Width;
+                    right = mRectItem.Right + szXY.Width;
+                }
+                if (szXY.Height >= 0)
+                {
+                    rcCtrl.Y = mRectItem.Top + szXY.Height;
+                    bottom = mRectItem.Top + szXY.Height + sz.Height;
+                }
+                else
+                {
+                    rcCtrl.Y = mRectItem.Bottom + szXY.Height - sz.Height;
+                    bottom = mRectItem.Bottom + szXY.Height;
+                }
+                rcCtrl = new Rectangle(rcCtrl.X, rcCtrl.Y, right - rcCtrl.X, bottom - rcCtrl.Y);
+                pControl.setPos(rcCtrl);
+            }
+        }
+        public override void setPos(Rectangle rect)
+        {
+            lock (lockObj)
+            {
+                base.setPos(rect);
+
+                if (mRectItem.IsEmpty)
+                {
+                    return;
+                }
+                int newLeft = rect.Left + mRectInset.Left;
+                int newTop = rect.Top + mRectInset.Top;
+                int newRight = rect.Right - mRectInset.Width;
+                int newBottom = rect.Bottom - mRectInset.Height;
+
+                rect.X = newLeft;
+                rect.Width = newRight - newLeft;
+                rect.Y = newTop;
+                rect.Height = newBottom - newTop;
+
+                for (int i = 0; i < mItems.Count; i++)
+                {
+                    if (mItems[i].isVisible() == false)
+                    {
+                        continue;
+                    }
+                    if (mItems[i].isFloat())
+                    {
+                        setFloatPos(i);
+                    }
+                    else
+                    {
+                        mItems[i].setPos(rect);
+                    }
                 }
             }
         }
         public override void doPaint(ref Graphics graphics, ref Bitmap bitmap, Rectangle rectPaint)
         {
-            Rectangle rcTemp = rectPaint;
-            rcTemp.Intersect(mRectItem);
-            if (rcTemp.IsEmpty == true)
+            lock (lockObj)
             {
-                return;
-            }
-            Region oldRgn = graphics.Clip.Clone();
-            graphics.IntersectClip(rcTemp);
-
-            base.doPaint(ref graphics, ref bitmap, rectPaint);
-
-            if (mItems.Count > 0)
-            {
-                Rectangle rc = mRectItem;
-                int newLeft = rc.Left + mRectInset.Left;
-                int newRight = rc.Right - mRectInset.Right;
-                int newTop = rc.Top + mRectInset.Top;
-                int newBottom = rc.Bottom - mRectInset.Bottom;
-
-                rc.X = newLeft;
-                rc.Width = newRight - newLeft;
-                rc.Y = newTop;
-                rc.Height = newBottom - newTop;
-
-                // 绘制滚动条
-                if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
-                {
-                    rc.Width -= mVerticalScrollbar.getFixedWidth();
-                }
-                if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
-                {
-                    rc.Height -= mHorizontalScrollbar.getFixedHeight();
-                }
-
-                // 绘制子控件
-                rcTemp = rectPaint;
-                rcTemp.Intersect(rc);
+                Rectangle rcTemp = rectPaint;
+                rcTemp.Intersect(mRectItem);
                 if (rcTemp.IsEmpty == true)
                 {
-                    foreach (var item in mItems)
+                    return;
+                }
+                Region oldRgn = graphics.Clip.Clone();
+                graphics.IntersectClip(rcTemp);
+
+                base.doPaint(ref graphics, ref bitmap, rectPaint);
+
+                if (mItems.Count > 0)
+                {
+                    Rectangle rc = mRectItem;
+                    int newLeft = rc.Left + mRectInset.Left;
+                    int newRight = rc.Right - mRectInset.Right;
+                    int newTop = rc.Top + mRectInset.Top;
+                    int newBottom = rc.Bottom - mRectInset.Bottom;
+
+                    rc.X = newLeft;
+                    rc.Width = newRight - newLeft;
+                    rc.Y = newTop;
+                    rc.Height = newBottom - newTop;
+
+                    // 绘制滚动条
+                    if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
                     {
-                        if (item.isVisible() == false)
+                        rc.Width -= mVerticalScrollbar.getFixedWidth();
+                    }
+                    if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
+                    {
+                        rc.Height -= mHorizontalScrollbar.getFixedHeight();
+                    }
+
+                    // 绘制子控件
+                    rcTemp = rectPaint;
+                    rcTemp.Intersect(rc);
+                    if (rcTemp.IsEmpty == true)
+                    {
+                        foreach (var item in mItems)
                         {
-                            continue;
-                        }
-                        if (rectPaint.IntersectsWith(item.getPos()) == false)
-                        {
-                            continue;
-                        }
-                        if (item.isFloat())
-                        {
-                            if (mRectItem.IntersectsWith(item.getPos()) == false)
+                            if (item.isVisible() == false)
                             {
                                 continue;
                             }
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
+                            if (rectPaint.IntersectsWith(item.getPos()) == false)
+                            {
+                                continue;
+                            }
+                            if (item.isFloat())
+                            {
+                                if (mRectItem.IntersectsWith(item.getPos()) == false)
+                                {
+                                    continue;
+                                }
+                                item.doPaint(ref graphics, ref bitmap, rectPaint);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    Region oldRgn1 = graphics.Clip.Clone();
-                    graphics.IntersectClip(rcTemp);
-
-                    for (int i = 0; i < mItems.Count; i++)
+                    else
                     {
-                        ControlUI item = mItems[i];
-                        if (item.isVisible() == false)
+                        Region oldRgn1 = graphics.Clip.Clone();
+                        graphics.IntersectClip(rcTemp);
+
+                        for (int i = 0; i < mItems.Count; i++)
                         {
-                            continue;
-                        }
-                        if (rectPaint.IntersectsWith(item.getPos()) == false)
-                        {
-                            continue;
-                        }
-                        if (item.isFloat())
-                        {
-                            if (mRectItem.IntersectsWith(item.getPos()) == false)
+                            ControlUI item = mItems[i];
+                            if (item.isVisible() == false)
                             {
                                 continue;
                             }
-                            Region oldRgn2 = graphics.Clip;
-                            graphics.Clip = oldRgn1;
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
-                            graphics.Clip = oldRgn2;
-                        }
-                        else
-                        {
-                            if (rc.IntersectsWith(item.getPos()) == false)
+                            if (rectPaint.IntersectsWith(item.getPos()) == false)
                             {
                                 continue;
                             }
-                            item.doPaint(ref graphics, ref bitmap, rectPaint);
+                            if (item.isFloat())
+                            {
+                                if (mRectItem.IntersectsWith(item.getPos()) == false)
+                                {
+                                    continue;
+                                }
+                                Region oldRgn2 = graphics.Clip;
+                                graphics.Clip = oldRgn1;
+                                item.doPaint(ref graphics, ref bitmap, rectPaint);
+                                graphics.Clip = oldRgn2;
+                            }
+                            else
+                            {
+                                if (rc.IntersectsWith(item.getPos()) == false)
+                                {
+                                    continue;
+                                }
+                                item.doPaint(ref graphics, ref bitmap, rectPaint);
+                            }
                         }
+                        graphics.Clip = oldRgn1;
                     }
-                    graphics.Clip = oldRgn1;
                 }
-            }
 
-            if (mVerticalScrollbar != null &&
-                mVerticalScrollbar.isVisible())
-            {
-                if (rectPaint.IntersectsWith(mVerticalScrollbar.getPos()))
+                if (mVerticalScrollbar != null &&
+                    mVerticalScrollbar.isVisible())
                 {
-                    mVerticalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
+                    if (rectPaint.IntersectsWith(mVerticalScrollbar.getPos()))
+                    {
+                        mVerticalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
+                    }
                 }
-            }
 
-            if (mHorizontalScrollbar != null &&
-                mHorizontalScrollbar.isVisible())
-            {
-                if (rectPaint.IntersectsWith(mHorizontalScrollbar.getPos()))
+                if (mHorizontalScrollbar != null &&
+                    mHorizontalScrollbar.isVisible())
                 {
-                    mHorizontalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
+                    if (rectPaint.IntersectsWith(mHorizontalScrollbar.getPos()))
+                    {
+                        mHorizontalScrollbar.doPaint(ref graphics, ref bitmap, rectPaint);
+                    }
                 }
+                graphics.Clip = oldRgn;
             }
-            graphics.Clip = oldRgn;
         }
         public override void setAttribute(string name, string value)
         {
@@ -661,98 +703,100 @@ namespace QUI
         }
         public override ControlUI findControl(FINDCONTROLPROC proc, ref object data, uint flags)
         {
-            ControlUI pResult = null;
+            lock (lockObj)
+            {
+                ControlUI pResult = null;
 
-            if ((flags & ControlFlag.UIFIND_VISIBLE) != 0 &&
-                isVisible() == false)
-            {
-                return null;
-            }
-            if ((flags & ControlFlag.UIFIND_ENABLED) != 0 &&
-                isVisible() == false)
-            {
-                return null;
-            }
-            if ((flags & ControlFlag.UIFIND_HITTEST) != 0)
-            {
-                // 检测水平滚动条控件
-                Point pos = (Point)data;
-                if (mRectItem.Contains(pos) == false)
+                if ((flags & ControlFlag.UIFIND_VISIBLE) != 0 &&
+                    isVisible() == false)
                 {
                     return null;
                 }
-
-                if (!mMouseChildEnabled)
+                if ((flags & ControlFlag.UIFIND_ENABLED) != 0 &&
+                    isVisible() == false)
                 {
-                    if (mVerticalScrollbar != null)
-                    {
-                        pResult = mVerticalScrollbar.findControl(proc, ref data, flags);
-                    }
-                    if (pResult == null && mHorizontalScrollbar != null)
-                    {
-                        pResult = mHorizontalScrollbar.findControl(proc, ref data, flags);
-                    }
-                    if (pResult == null)
-                    {
-                        pResult = base.findControl(proc, ref data, flags);
-                    }
-
-                    return pResult;
+                    return null;
                 }
-            }
+                if ((flags & ControlFlag.UIFIND_HITTEST) != 0)
+                {
+                    // 检测水平滚动条控件
+                    Point pos = (Point)data;
+                    if (mRectItem.Contains(pos) == false)
+                    {
+                        return null;
+                    }
 
-            // 检测垂直滚动条控件
-            if (mVerticalScrollbar != null)
-            {
-                pResult = mVerticalScrollbar.findControl(proc, ref data, flags);
-            }
-            if (pResult == null && mHorizontalScrollbar != null)
-            {
-                pResult = mHorizontalScrollbar.findControl(proc, ref data, flags);
-            }
-            if (pResult != null)
-            {
-                return pResult;
-            }
+                    if (!mMouseChildEnabled)
+                    {
+                        if (mVerticalScrollbar != null)
+                        {
+                            pResult = mVerticalScrollbar.findControl(proc, ref data, flags);
+                        }
+                        if (pResult == null && mHorizontalScrollbar != null)
+                        {
+                            pResult = mHorizontalScrollbar.findControl(proc, ref data, flags);
+                        }
+                        if (pResult == null)
+                        {
+                            pResult = base.findControl(proc, ref data, flags);
+                        }
 
-            if ((flags & ControlFlag.UIFIND_ME_FIRST) != 0)
-            {
-                pResult = base.findControl(proc, ref data, flags);
+                        return pResult;
+                    }
+                }
+
+                // 检测垂直滚动条控件
+                if (mVerticalScrollbar != null)
+                {
+                    pResult = mVerticalScrollbar.findControl(proc, ref data, flags);
+                }
+                if (pResult == null && mHorizontalScrollbar != null)
+                {
+                    pResult = mHorizontalScrollbar.findControl(proc, ref data, flags);
+                }
                 if (pResult != null)
                 {
                     return pResult;
                 }
-            }
-            if ((flags & ControlFlag.UIFIND_TOP_FIRST) != 0)
-            {
-                for (int i = mItems.Count - 1; i >= 0; i--)
+
+                if ((flags & ControlFlag.UIFIND_ME_FIRST) != 0)
                 {
-                    pResult = mItems[i].findControl(proc, ref data, flags);
+                    pResult = base.findControl(proc, ref data, flags);
                     if (pResult != null)
                     {
                         return pResult;
                     }
                 }
-            }
-            else
-            {
-                foreach (var item in mItems)
+                if ((flags & ControlFlag.UIFIND_TOP_FIRST) != 0)
                 {
-                    pResult = item.findControl(proc, ref data, flags);
-                    if (pResult != null)
+                    for (int i = mItems.Count - 1; i >= 0; i--)
                     {
-                        return pResult;
+                        pResult = mItems[i].findControl(proc, ref data, flags);
+                        if (pResult != null)
+                        {
+                            return pResult;
+                        }
                     }
                 }
+                else
+                {
+                    foreach (var item in mItems)
+                    {
+                        pResult = item.findControl(proc, ref data, flags);
+                        if (pResult != null)
+                        {
+                            return pResult;
+                        }
+                    }
+                }
+
+                if (pResult == null)
+                {
+                    pResult = base.findControl(proc, ref data, flags);
+                }
+
+                return pResult;
             }
-
-
-            if (pResult == null)
-            {
-                pResult = base.findControl(proc, ref data, flags);
-            }
-
-            return pResult;
         }
 
         public virtual Size getScrollPos()
@@ -786,40 +830,42 @@ namespace QUI
         }
         public virtual void setScrollPos(Size szPos)
         {
-            int cx = 0;
-            int cy = 0;
-            if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
+            lock (lockObj)
             {
-                int iLastScrollPos = mVerticalScrollbar.getScrollPos();
-                mVerticalScrollbar.setScrollPos(szPos.Height);
-                cy = mVerticalScrollbar.getScrollPos() - iLastScrollPos;
+                int cx = 0;
+                int cy = 0;
+                if (mVerticalScrollbar != null && mVerticalScrollbar.isVisible())
+                {
+                    int iLastScrollPos = mVerticalScrollbar.getScrollPos();
+                    mVerticalScrollbar.setScrollPos(szPos.Height);
+                    cy = mVerticalScrollbar.getScrollPos() - iLastScrollPos;
+                }
+
+                if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
+                {
+                    int iLastScrollPos = mHorizontalScrollbar.getScrollPos();
+                    mHorizontalScrollbar.setScrollPos(szPos.Width);
+                    cx = mHorizontalScrollbar.getScrollPos() - iLastScrollPos;
+                }
+
+                if (cx == 0 && cy == 0) return;
+
+                Rectangle rcPos;
+                for (int it2 = 0; it2 < mItems.Count; it2++)
+                {
+                    ControlUI pControl = (mItems[it2]);
+                    if (!pControl.isVisible()) continue;
+                    if (pControl.isFloat()) continue;
+
+                    rcPos = pControl.getPos();
+                    int newLeft = rcPos.Left - cx;
+                    int newRight = rcPos.Right - cx;
+                    int newTop = rcPos.Top - cy;
+                    int newBottom = rcPos.Bottom - cy;
+                    Rectangle newRect = new Rectangle(newLeft, newTop, newRight - newLeft, newBottom - newTop);
+                    pControl.setPos(newRect);
+                }
             }
-
-            if (mHorizontalScrollbar != null && mHorizontalScrollbar.isVisible())
-            {
-                int iLastScrollPos = mHorizontalScrollbar.getScrollPos();
-                mHorizontalScrollbar.setScrollPos(szPos.Width);
-                cx = mHorizontalScrollbar.getScrollPos() - iLastScrollPos;
-            }
-
-            if (cx == 0 && cy == 0) return;
-
-            Rectangle rcPos;
-            for (int it2 = 0; it2 < mItems.Count; it2++)
-            {
-                ControlUI pControl = (mItems[it2]);
-                if (!pControl.isVisible()) continue;
-                if (pControl.isFloat()) continue;
-
-                rcPos = pControl.getPos();
-                int newLeft = rcPos.Left - cx;
-                int newRight = rcPos.Right - cx;
-                int newTop = rcPos.Top - cy;
-                int newBottom = rcPos.Bottom - cy;
-                Rectangle newRect = new Rectangle(newLeft, newTop, newRight - newLeft, newBottom - newTop);
-                pControl.setPos(newRect);
-            }
-
             invalidate();
         }
         public virtual void lineUp()
@@ -1027,7 +1073,7 @@ namespace QUI
             }
         }
 
-        protected ObservableCollectionThreadSafe<ControlUI> mItems;
+        protected List<ControlUI> mItems;
         protected Rectangle mRectInset;
         protected int mChildPadding;
         protected bool mAutoDestroy;
@@ -1038,5 +1084,6 @@ namespace QUI
         protected ScrollbarUI mHorizontalScrollbar;
 
         protected bool mDelayedDestroy;
+        private Object lockObj;
     }
 }

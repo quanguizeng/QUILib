@@ -21,7 +21,7 @@
         <Control bkimage="firewall_ok.png" maxheight="48" maxwidth="47"/>
         <Text text="{p}{c #2F6F95}{b}木马防火墙正在保护电脑{/b}{/c}{y 20}{n}已拦截系统攻击{c #F27D30}2{/c}次{/p}" pos="57, 0, 250, 50" float="true" showhtml="true"/>
         <Button text="查看" pos="192,35,228,55" float="true" textcolor="#FF0680C9" normalimage="button_normal.png" hotimage="button_hover.png" pushedimage="button_pushed.png" />
-        <Text text="{p}推荐您清理一下电脑的垃圾文件，清理后能{y 15}{n}释放磁盘空间，提高电脑速度。{/p}" pos="0, 60, 250, 150" float="true" showhtml="true"/>
+        <Text text="{p}推荐您清理一下电脑的垃圾文件，清理后能释放磁盘空间，提高电脑速度。{/p}" pos="0, 60, 250, 150" float="true" showhtml="true"/>
         <Button text="立即清理" pos="162,120,228,142" float="true" textcolor="#FF0680C9" normalimage="button_normal.png" hotimage="button_hover.png" pushedimage="button_pushed.png" />
       </HorizontalLayout>
       <HorizontalLayout height="1">

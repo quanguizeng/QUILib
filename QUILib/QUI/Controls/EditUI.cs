@@ -373,7 +373,7 @@ namespace QUI
 
             uint dwBorderColor = (uint)mBorderColor.ToArgb();
             int nBorderSize = mBorderSize;
-            //if ((mButtonState & (int)PaintFlags.UISTATE_HOT) != 0 || (mButtonState & (int)PaintFlags.UISTATE_FOCUSED) != 0)
+            if ((mButtonState & (int)PaintFlags.UISTATE_HOT) != 0 || (mButtonState & (int)PaintFlags.UISTATE_FOCUSED) != 0)
             {
                 dwBorderColor = 0xFF85E4FF;
             }

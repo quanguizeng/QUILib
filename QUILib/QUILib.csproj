@@ -44,10 +44,6 @@
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="Utility, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Utility\Utility\bin\Debug\Confused\Utility.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -92,8 +88,6 @@
     <Compile Include="QUI\Controls\TextUI.cs" />
     <Compile Include="QUI\DialogBuilder.cs" />
     <Compile Include="QUI\MarkupNode.cs" />
-    <Compile Include="QUI\ObservableCollection.cs" />
-    <Compile Include="QUI\ObservableCollectionThreadSafe.cs" />
     <Compile Include="QUI\PaintManager.cs" />
     <Compile Include="QUI\RenderEngine.cs" />
   </ItemGroup>

@@ -45,3 +45,16 @@ D:\工作\开发日记\2016-11-5\新地面站\主工程\QUILib-master\360SafeDem
 D:\工作\开发日记\2016-11-5\新地面站\主工程\QUILib-master\360SafeDemo\obj\Debug\360SafeDemo.csprojResolveAssemblyReference.cache
 D:\工作\开发日记\2016-11-5\新地面站\主工程\QUILib-master\360SafeDemo\obj\Debug\_360SafeDemo.Properties.Resources.resources
 D:\工作\开发日记\2016-11-5\新地面站\主工程\QUILib-master\360SafeDemo\obj\Debug\360SafeDemo.csproj.GenerateResource.Cache
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.csprojAssemblyReference.cache
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\_360SafeDemo.Properties.Resources.resources
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.csproj.GenerateResource.cache
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.csproj.CoreCompileInputs.cache
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\360SafeDemo.exe.config
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\360SafeDemo.exe
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\360SafeDemo.pdb
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\QUILib.dll
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\ICSharpCode.SharpZipLib.dll
+E:\工作\QUI\QUILib\360SafeDemo\bin\Debug\QUILib.pdb
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.csproj.CopyComplete
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.exe
+E:\工作\QUI\QUILib\360SafeDemo\obj\Debug\360SafeDemo.pdb
