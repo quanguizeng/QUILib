@@ -116,128 +116,140 @@ namespace QUI
         }
         public override bool add(ControlUI pControl)
         {
-            // Override the Add() method so we can add items specifically to
-            // the intended widgets. Headers are assumed to be
-            // answer the correct interface so we can add multiple list headers.
-            if (pControl.getInterface("ListHeader") != null)
+            lock (lockObj)
             {
-                if (mHeader != pControl && mHeader.getCount() == 0)
+                // Override the Add() method so we can add items specifically to
+                // the intended widgets. Headers are assumed to be
+                // answer the correct interface so we can add multiple list headers.
+                if (pControl.getInterface("ListHeader") != null)
                 {
+                    if (mHeader != pControl && mHeader.getCount() == 0)
                     {
-                        // 把旧的表头控件属性赋予到新的表头控件
-                        pControl.setBackImage(mHeader.getBackImage());
-                        pControl.setVisible(mHeader.isVisible());
+                        {
+                            // 把旧的表头控件属性赋予到新的表头控件
+                            pControl.setBackImage(mHeader.getBackImage());
+                            pControl.setVisible(mHeader.isVisible());
+                        }
+                        base.remove(mHeader);
+                        mHeader = null;
+                        mHeader = (ListHeaderUI)(pControl);
                     }
-                    base.remove(mHeader);
-                    mHeader = null;
-                    mHeader = (ListHeaderUI)(pControl);
-                }
 
-                return base.addAt(pControl,0);
+                    return base.addAt(pControl, 0);
+                }
+                // We also need to recognize header sub-items
+                if (pControl.getClass() == "ListHeaderItemUI") return mHeader.add(pControl);
+                // The list items should know about us
+                IListItemUI pListItem = (IListItemUI)pControl.getInterface("ListItem");
+                if (pListItem != null)
+                {
+                    pListItem.setOwner(this);
+                    pListItem.setIndex(getCount());
+                }
+                return mList.add(pControl);
             }
-            // We also need to recognize header sub-items
-            if (pControl.getClass() == "ListHeaderItemUI") return mHeader.add(pControl);
-            // The list items should know about us
-            IListItemUI pListItem = (IListItemUI)pControl.getInterface("ListItem");
-            if (pListItem != null)
-            {
-                pListItem.setOwner(this);
-                pListItem.setIndex(getCount());
-            }
-            return mList.add(pControl);
         }
 
         public override bool addAt(ControlUI pControl, int iIndex)
         {
-            // Override the AddAt() method so we can add items specifically to
-            // the intended widgets. Headers and are assumed to be
-            // answer the correct interface so we can add multiple list headers.
-            if (pControl.getInterface("ListHeader") != null) return base.addAt(pControl, iIndex);
-            // We also need to recognize header sub-items
-            if (pControl.getClass() == "ListHeaderItemUI") return mHeader.addAt(pControl, iIndex);
-
-            if (!mList.addAt(pControl, iIndex)) return false;
-
-            // The list items should know about us
-            IListItemUI pListItem = (IListItemUI)pControl.getInterface("ListItem");
-            if (pListItem != null)
+            lock (lockObj)
             {
-                pListItem.setOwner(this);
-                pListItem.setIndex(iIndex);
-            }
+                // Override the AddAt() method so we can add items specifically to
+                // the intended widgets. Headers and are assumed to be
+                // answer the correct interface so we can add multiple list headers.
+                if (pControl.getInterface("ListHeader") != null) return base.addAt(pControl, iIndex);
+                // We also need to recognize header sub-items
+                if (pControl.getClass() == "ListHeaderItemUI") return mHeader.addAt(pControl, iIndex);
 
-            for (int i = iIndex + 1; i < mList.getCount(); ++i)
-            {
-                ControlUI p = mList.getItemAt(i);
-                pListItem = (IListItemUI)p.getInterface("ListItem");
+                if (!mList.addAt(pControl, iIndex)) return false;
+
+                // The list items should know about us
+                IListItemUI pListItem = (IListItemUI)pControl.getInterface("ListItem");
                 if (pListItem != null)
                 {
-                    pListItem.setIndex(pListItem.getIndex() + 1);
+                    pListItem.setOwner(this);
+                    pListItem.setIndex(iIndex);
                 }
+
+                for (int i = iIndex + 1; i < mList.getCount(); ++i)
+                {
+                    ControlUI p = mList.getItemAt(i);
+                    pListItem = (IListItemUI)p.getInterface("ListItem");
+                    if (pListItem != null)
+                    {
+                        pListItem.setIndex(pListItem.getIndex() + 1);
+                    }
+                }
+                return true;
             }
-            return true;
         }
         public override bool remove(ControlUI pControl)
         {
-            if (pControl.getInterface("ListHeader") != null)
+            lock (lockObj)
             {
-                return base.remove(pControl);
-            }
-            // We also need to recognize header sub-items
-            if (pControl.getClass() == "ListHeaderItemUI")
-            {
-                return mHeader.remove(pControl);
-            }
-
-            int iIndex = mList.getItemIndex(pControl);
-            if (iIndex == -1)
-            {
-                return false;
-            }
-
-            if (!mList.removeAt(iIndex))
-            {
-                return false;
-            }
-
-            for (int i = iIndex; i < mList.getCount(); ++i)
-            {
-                ControlUI p = mList.getItemAt(i);
-                IListItemUI pListItem = (IListItemUI)p.getInterface("ListItem");
-                if (pListItem != null)
+                if (pControl.getInterface("ListHeader") != null)
                 {
-                    pListItem.setIndex(pListItem.getIndex() - 1);
+                    return base.remove(pControl);
                 }
-            }
-            mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
-            selectItem(findSelectable(mCurSel, false));
-            ensureVisible(mCurSel);
+                // We also need to recognize header sub-items
+                if (pControl.getClass() == "ListHeaderItemUI")
+                {
+                    return mHeader.remove(pControl);
+                }
 
-            return true;
+                int iIndex = mList.getItemIndex(pControl);
+                if (iIndex == -1)
+                {
+                    return false;
+                }
+
+                if (!mList.removeAt(iIndex))
+                {
+                    return false;
+                }
+
+                for (int i = iIndex; i < mList.getCount(); ++i)
+                {
+                    ControlUI p = mList.getItemAt(i);
+                    IListItemUI pListItem = (IListItemUI)p.getInterface("ListItem");
+                    if (pListItem != null)
+                    {
+                        pListItem.setIndex(pListItem.getIndex() - 1);
+                    }
+                }
+                mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
+                selectItem(findSelectable(mCurSel, false));
+                ensureVisible(mCurSel);
+
+                return true;
+            }
         }
         public override bool removeAt(int iIndex)
         {
-            if (!mList.removeAt(iIndex))
+            lock (lockObj)
             {
-                return false;
-            }
-
-            for (int i = iIndex; i < mList.getCount(); ++i)
-            {
-                ControlUI p = mList.getItemAt(i);
-                IListItemUI pListItem = (IListItemUI)p.getInterface("ListItem");
-                if (pListItem != null)
+                if (!mList.removeAt(iIndex))
                 {
-                    pListItem.setIndex(pListItem.getIndex() - 1);
+                    return false;
                 }
+
+                for (int i = iIndex; i < mList.getCount(); ++i)
+                {
+                    ControlUI p = mList.getItemAt(i);
+                    IListItemUI pListItem = (IListItemUI)p.getInterface("ListItem");
+                    if (pListItem != null)
+                    {
+                        pListItem.setIndex(pListItem.getIndex() - 1);
+                    }
+                }
+
+                mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
+                selectItem(findSelectable(mCurSel, false));
+                ensureVisible(mCurSel);
+                needParentUpdate();
+
+                return true;
             }
-
-            mCurSel = mCurSel > iIndex ? mCurSel - 1 : mCurSel;
-            selectItem(findSelectable(mCurSel, false));
-            ensureVisible(mCurSel);
-            needParentUpdate();
-
-            return true;
         }
         public override void removeAll()
         {
