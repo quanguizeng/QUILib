@@ -1084,6 +1084,6 @@ namespace QUI
         protected ScrollbarUI mHorizontalScrollbar;
 
         protected bool mDelayedDestroy;
-        private Object lockObj;
+        protected Object lockObj;
     }
 }
